@@ -1,4 +1,4 @@
-[![License](https://poser.pugx.org/easyswoole/easyswoole/license)](https://packagist.org/packages/easyswoole/easyswoole)
+[![License](https://poser.pugx.org/alittletry/alittlepay/license)](https://packagist.org/packages/alittletry/alittlepay)
 
 # ALittlePay - 一个开源免费的挂机监控项目 （代码尚未提交,8月7日再提交）
 
