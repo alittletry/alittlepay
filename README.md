@@ -6,6 +6,7 @@ ALittlePay是一个基于Thinkphp后端框架和Bootstrap前端框架开发的�
 - 基于Thinkphp后端框架
 - 基于Bootstrap前端框架
 - 精简的admin&api应用分类
+- 自动且精准判断`微信`或`支付宝`收款通知
 - 安全的接口权限审计
 - 独特的数据锁让数据无误差记录
 - Redis应用让数据处理更加高效
