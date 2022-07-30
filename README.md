@@ -1,6 +1,6 @@
 [![License](https://poser.pugx.org/easyswoole/easyswoole/license)](https://packagist.org/packages/easyswoole/easyswoole)
 
-# ALittlePay - 一个开源免费的挂机监控项目
+# ALittlePay - 一个开源免费的挂机监控项目 （代码尚未提交,8月7日再提交）
 
 ALittlePay是一个基于Thinkphp后端框架和Bootstrap前端框架开发的个人挂机支付系统。它是专门个人用户使用APP监控支付而创建的，以服务无法开通商家收款的用户。ALittlePay保持了Thinkphp的原始特性，允许开发人员以最小的学习成本和努力编写更多模块
           
