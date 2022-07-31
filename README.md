@@ -34,16 +34,29 @@ Redis
     ```bash
     git clone https://github.com/alittletry/alittlepay.git
     cd alittlepay
+    
+    或者
+    下载压缩包,自行解压
     ```
     
 2. 配置数据库：
     * 后端数据库参考TP6填写参数
     * 将根目录下.env文件中数据库和redis配置进行填写
-    * 将alittlepay.sql文件导入自己的数据库中
+    * 将根目录下init.sql文件导入自己的数据库中
 
 
 3. 打开后台
 
+    注意：1 2步完成后，需要设置网站运行目录为public并且配置对应的thinkphp伪静态，具体参考下方图片(Nginx为例)
+    ![image](https://user-images.githubusercontent.com/110278132/182032968-9fb9e7b9-67c6-4952-9bd7-3687d19b4cbd.png)
+    ![image](https://user-images.githubusercontent.com/110278132/182032974-acba2e47-c4a9-496d-ac6e-dbb4a2e6d325.png)
+    ```bash
+    location / {
+	if (!-e $request_filename){
+		rewrite  ^(.*)$  /index.php?s=$1  last;   break;
+	}
+    }
+    ```
     ```bash
     打开 http://你的域名/admin/login/login
     默认账号密码：admin/123456
