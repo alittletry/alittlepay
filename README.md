@@ -99,6 +99,9 @@ Redis
     - VIP群 878074065 （本群需要付费99元）
     - ALittlePay官方一群 683331712(未满)
     
+    -加群获取apk文件,入群验证信息填写你的github用户名(需要右上角点个star支持哦)
+    
 - 商业支持：
     - QQ 444797006
     - EMAIL km8prhp@gmail.com
+
