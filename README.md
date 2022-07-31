@@ -14,11 +14,11 @@ ALittlePay是一个基于Thinkphp后端框架和Bootstrap前端框架开发的�
 - 完善的交易分析,带有详细的支付调试功能和记录
 - 独特的1+1+N监控设计,1个网站1个用户N台设备轮训收款,并带有独特的价格浮动判断
 ## 演示图
--后台
+-后台&APP
 ![image](https://user-images.githubusercontent.com/110278132/182033038-dc185fe5-02c2-490d-8786-33580da2f0b8.png)
 ![image](https://user-images.githubusercontent.com/110278132/182033076-c45f0159-ec81-475e-95df-0c777b42f9d2.png)
 ![image](https://user-images.githubusercontent.com/110278132/182033101-2a0be17d-b606-4f40-bfce-8803e3f8c0db.png)
--APP（加群获取）
+
 ![15f260aa9b3192c9439053f010c46ae](https://user-images.githubusercontent.com/110278132/182033138-1a69858d-be10-4e63-a271-f1d2da06bdc4.jpg)
 
 ## Doc 
