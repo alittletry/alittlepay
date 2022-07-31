@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>个人信息 - 派后台管理系统</title>
+    <link rel="icon" href="__ADMIN_PATH__favicon.ico" type="image/ico">
+    <meta name="keywords" content="派后台管理系统">
+    <meta name="description" content="派后台管理系统">
+    <meta name="author" content="cfn">
+    <link href="__ADMIN_PATH__css/bootstrap.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/style.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.css">
+    <link href="__ADMIN_PATH__css/cropper.min.css" rel="stylesheet">
+    <style type="text/css">
+        /* 裁剪样式 */
+        .image-wrapper {
+            height: 364px;
+            width: 100%;
+            box-shadow: inset 0 0 3px rgba(0, 0, 0, .075);
+            background-color: #fcfdfe;
+            overflow: hidden;
+        }
+        .image-preview {
+            float: left;
+            margin-bottom: 0.5rem;
+            margin-right: 0.5rem;
+            border: 1px solid #f1f2f3;
+            border-radius: 2px;
+            background-color: #fff;
+            overflow: hidden;
+        }
+        .image-preview img {
+            vertical-align: top;
+        }
+        .preview-lg {
+            height: 9rem;
+            width: 16rem;
+        }
+        .preview-md {
+            height: 4.5rem;
+            width: 8rem;
+        }
+        .preview-sm {
+            height: 2.25rem;
+            width: 4rem;
+        }
+        .preview-xs {
+            height: 1.125rem;
+            margin-right: 0;
+            width: 2rem;
+        }
+        @media (max-width: 991px) {
+            #image-modal .image-btns {
+                margin-bottom: 15px;
+            }
+        }
+        /* loading样式 - 可整体替换之前的loading */
+        @-webkit-keyframes spinner-border {
+            to {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes spinner-borderspinner-border {
+            to {
+                -webkit-transform: rotate(360deg);
+                transform: rotate(360deg);
+            }
+        }
+        .spinner-border {
+            display: inline-block;
+            vertical-align: text-bottom;
+            border: 0.125em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            -webkit-animation: spinner-border .75s linear infinite;
+            animation: spinner-border .75s linear infinite;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="edit-avatar">
+                        <img src="{$info.avatar}" alt="{$info.name}" class="img-avatar">
+                        <div class="avatar-divider"></div>
+                        <div class="edit-avatar-content">
+                            <button class="btn btn-default trigger-btn">修改头像</button>
+                            <p class="m-0">选择一张你喜欢的图片，裁剪后会自动生成264x264大小，上传图片大小不能超过2M。</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <form class="site-form">
+                        <input type="hidden" class="form-control" name="avatar" id="avatar" value="{$info.avatar}"/>
+                        <div class="form-group">
+                            <label for="name">用户名</label>
+                            <input type="text" class="form-control" name="name" id="name" value="{$info.name}" disabled="disabled" />
+                        </div>
+                        <div class="form-group">
+                            <label for="realname">真实姓名</label>
+                            <input type="text" class="form-control" name="realname" id="realname" value="{$info.realname}" disabled="disabled" />
+                        </div>
+                        <div class="form-group">
+                            <label for="nickname">昵称</label>
+                            <input type="text" class="form-control" name="nickname" id="nickname" value="{$info.nickname}" />
+                        </div>
+                        <div class="form-group">
+                            <label for="tel">电话</label>
+                            <input type="tel" class="form-control" name="tel" id="tel" placeholder="输入您的昵称" value="{$info.tel}">
+                        </div>
+                        <div class="form-group">
+                            <label for="mail">邮箱</label>
+                            <input type="email" class="form-control" name="mail" id="mail" aria-describedby="emailHelp" placeholder="请输入正确的邮箱地址" value="{$info.mail}">
+                            <small id="emailHelp" class="form-text text-muted">请保证您填写的邮箱地址是正确的。</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="remark">简介</label>
+                            <textarea class="form-control" name="remark" id="remark" rows="3">{$info.remark|default="这家伙很懒，什么也没留下"}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--图片裁剪START-->
+<div class="modal fade" id="image-modal" aria-hidden="true" aria-labelledby="image-modal-label" role="dialog" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close" data-dismiss="modal" type="button">&times;</button>
+                <h4 class="modal-title" id="image-modal-label">上传图片</h4>
+            </div>
+            <div class="modal-body">
+                <div class="image-body">
+                    <div class="image-upload m-b-15">
+                        <button class="btn btn-primary" type="button" onclick="$('input[id=imageInput]').click();">请选择图片</button>
+                        <span class="image-name"></span>
+                        <input type="file" class="image-input hide" id="imageInput" name="file" accept=".jpg,.jpeg,.png,.gif,.bmp,.tiff">
+                    </div>
+                    <div class="row">
+                        <div class="col-md-9 m-b-15">
+                            <div class="image-wrapper"></div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="image-previews clearfix">
+                                <div class="image-preview preview-lg"></div>
+                                <div class="image-preview preview-md"></div>
+                                <div class="image-preview preview-sm"></div>
+                                <div class="image-preview preview-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 image-btns">
+                            <button class="btn btn-primary mdi mdi-rotate-left" data-method="rotate" data-option="-45" type="button" title="向左旋转-45度"></button>
+                            <button class="btn btn-primary mdi mdi-rotate-right" data-method="rotate" data-option="45" type="button" title="向右旋转45度"></button>
+                            <button type="button" class="btn btn-primary mdi mdi-magnify-plus-outline" data-method="zoom" data-option="0.1" title="放大图片"></button>
+                            <button type="button" class="btn btn-primary mdi mdi-magnify-minus-outline" data-method="zoom" data-option="-0.1" title="缩小图片"></button>
+                            <button type="button" class="btn btn-primary mdi mdi-cached" data-method="reset" title="重置图片"></button>
+                        </div>
+                        <div class="col-md-5 image-btns toggles-btns">
+                            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                <label class="btn btn-primary">
+                                    <input type="radio" name="aspectRatio" id="aspectRatio1" value="1.7777777777777777">
+                                    <span>16:9</span>
+                                </label>
+                                <label class="btn btn-primary">
+                                    <input type="radio" name="aspectRatio" id="aspectRatio2" value="1.3333333333333333">
+                                    <span>4:3</span>
+                                </label>
+                                <label class="btn btn-primary active">
+                                    <input type="radio" name="aspectRatio" id="aspectRatio3" value="1" checked>
+                                    <span>1:1</span>
+                                </label>
+                                <label class="btn btn-primary">
+                                    <input type="radio" name="aspectRatio" id="aspectRatio4" value="0.6666666666666666">
+                                    <span>2:3</span>
+                                </label>
+                                <label class="btn btn-primary">
+                                    <input type="radio" name="aspectRatio" id="aspectRatio5" value="NaN">
+                                    <span>自适应</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-primary btn-block upload-btn mdi mdi-content-save" type="submit">保存修改</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!--图片裁剪END-->
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/main.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/cropper.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-notify.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/lightyear.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery.lyear.loading.js"></script>
+<script src="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.js"></script>
+<script>
+    $(".site-form").submit(function () {
+        if ($("input[name='nickname']").val() == '') lightyear.notify('昵称不能为空', 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        else if ($("input[name='avatar']").val() == '') lightyear.notify('头像不能为空', 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        else if ($("input[name='tel']").val() == '') lightyear.notify('电话不能为空', 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        else if ($("input[name='mail']").val() == '') lightyear.notify('邮箱不能为空', 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        else
+            $.post(url="/admin/admin.admin/changProfile",{
+                "nickname":$("input[name='nickname']").val(),
+                "avatar":$("input[name='avatar']").val(),
+                "tel":$("input[name='tel']").val(),
+                "mail":$("input[name='mail']").val(),
+                "remark":$("textarea[name='remark']").val()
+            },function (res) {
+                if (res.status === 200) lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+            });
+        return false;
+    })
+</script>
+<script>
+    function cropImage()
+    {
+        this.$triggerBtn   = $('.trigger-btn');                            // 上传按钮
+        //this.$imageText    = this.$triggerBtn.parent().prev('.image-src'); // 图片地址输入框
+        this.$imageModal   = $('#image-modal');                            // 弹出框
+        this.$imageName    = this.$imageModal.find('.image-name')          // 图片名称
+        this.$imageInput   = this.$imageModal.find('.image-input');        // file上传文件
+        this.$imageUpload  = this.$imageModal.find('.image-upload');       // file所在元素
+        this.$imageBtns    = this.$imageModal.find('.image-btns');         // 图片调整按钮(旋转、放大等)
+        this.$imageWrapper = this.$imageModal.find('.image-wrapper');      // 图片处理区域
+        this.$imagePreview = this.$imageModal.find('.image-preview');      // 图片裁剪预览区域
+        this.$uploadBtn    = this.$imageModal.find('.upload-btn');         // 上传按钮
+        this.$togglesBtns  = this.$imageModal.find('.toggles-btns');       // 比例切换按钮
+        this.URL           = window.URL || window.webkitURL;
+        this.$options      = {
+            aspectRatio: 1 / 1,
+            preview: '.image-preview'
+        };                                                                 // 配置
+        this.init();
+    }
+    cropImage.prototype = {
+        constructor: cropImage,
+        init: function() {
+            this.initModal();
+            this.addListener();
+        },
+        initModal: function() {
+            this.$imageModal.modal({
+                show: false
+            });
+
+            if(!URL) {
+                this.$imageInput.prop('disabled', true);
+            }
+        },
+        addListener: function() {
+            // 绑定事件
+            this.$triggerBtn.on('click', $.proxy(this.click, this));
+            this.$imageInput.on('change', $.proxy(this.change, this));
+            this.$togglesBtns.on('change', $.proxy(this.choose, this));
+            this.$uploadBtn.on('click', $.proxy(this.ajaxUpload, this));
+            this.$imageBtns.on('click', $.proxy(this.rotate, this));
+        },
+        click: function(e) {
+            // 点击上传按钮
+            this.$imageText = $(e.target).parent().prev('.image-src');
+            this.$imageModal.modal('show');
+            this.initPreview();
+        },
+        initPreview: function() {
+            this.active = false;
+            this.$imageInput.val('');
+            this.$imageName.text('');
+            this.$imageWrapper.empty();
+            // 如果已有图片地址，初始化图片预览区域
+            this.$imagePreview.empty();
+            // var url = this.$imageText.val();
+            // url != "" && this.$imagePreview.html('<img src="' + url + '">');
+        },
+        change: function() {
+            // 选择图片
+            var files, file;
+            files = this.$imageInput.prop('files');
+
+            if (files && files.length > 0) {
+                file = files[0];
+                if (this.isImageFile(file)) {
+                    this.$imageType = file.type;
+                    this.$imageName.text(file.name);
+                    if (this.imageUrl) {
+                        this.URL.revokeObjectURL(this.imageUrl);
+                    }
+                    this.imageUrl = this.URL.createObjectURL(file);
+                    this.startCropper();
+                }
+            }
+        },
+        startCropper: function() {
+            // 选择图片后初始化
+            if (this.active) {
+                this.$image.cropper('replace', this.url);
+            } else {
+                this.$image = $('<img src="' + this.imageUrl + '">');
+                this.$imageWrapper.empty().html(this.$image);
+                this.$image.cropper('destroy').cropper(this.$options);
+
+                this.active = true;
+            }
+        },
+        isImageFile: function(file) {
+            // 判断是否图片格式
+            if (file.type) {
+                return /^image\/\w+$/.test(file.type);
+            } else {
+                return /\.(jpg|jpeg|png|gif|bmp|tiff)$/.test(file);
+            }
+        },
+        choose: function(e) {
+            var $this = $(e.target);
+            var name = $this.attr('name');
+
+            if (!this.active) {
+                return;
+            }
+
+            this.$options[name] = $this.val();
+            this.$image.cropper('destroy').cropper(this.$options);
+        },
+        rotate: function(e) {
+            // 调整图片操作
+            var data;
+            if (this.active) {
+                data = $(e.target).data();
+                if (data.method) {
+                    this.$image.cropper(data.method, data.option);
+                }
+            }
+        },
+        stopCropper: function() {
+            // 裁剪上传完成后重置
+            if (this.active) {
+                this.$image.cropper('destroy');
+                this.$image.remove();
+                this.$imageModal.modal('hide');
+                this.$imageInput.val('');
+                this.$imageName.text('');
+                this.$togglesBtns.find('#aspectRatio3').attr('checked', true);
+                this.active = false;
+            }
+        },
+        ajaxUpload: function() {
+            var cas        = this.$image.cropper('getCroppedCanvas'),
+                base64Data = cas.toDataURL(this.$imageType),
+                _this      = this,
+                $loading;
+
+            // ajax上传
+            $.ajax("/admin/widget.files/baseToImage", {
+                type: 'post',
+                data: {"image" : base64Data},
+                dataType: 'json',
+                beforeSend: function() {
+                    _this.$uploadBtn.prop('disabled', true);
+                    $loading = $('.upload-btn').lyearloading({
+                        opacity: 0.2,
+                        spinnerSize: 'nm'
+                    });
+                },
+                success: function(data) {
+                    if ($.isPlainObject(data) && (data.state === 200 || data.status === 200 || data.code === 200)) {
+                        $("#avatar").val(data.data.src);
+                        $(".img-avatar").attr("src",data.data.src);
+                        _this.$imageText.val(data.data.src);
+                        _this.stopCropper();
+                    } else {
+                        lightyear.notify(data.message, 'danger', 3000);
+                    }
+                },
+                error: function(XMLHttpRequest, textStatus, errorThrown) {
+                    console.log(textStatus);
+                },
+                complete: function() {
+                    _this.$uploadBtn.prop('disabled', false);
+                    $loading.destroy();
+                }
+            });
+        }
+    };
+    $(document).ready(function(){
+        new cropImage();
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+   
+    {include file="public/header" /}
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>通知记录</h4></div>
+                <div class="card-body">
+                    <table id="tb_departments"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer"/}
+<script type="text/javascript">
+    $('#tb_departments').bootstrapTable({
+        classes: 'table table-bordered table-hover table-striped',
+        url: '/admin/order.index/callback',
+        method: 'post',
+        dataType : 'json',        // 因为本示例中是跨域的调用,所以涉及到ajax都采用jsonp,
+        uniqueId: 'id',
+        idField: 'id',             // 每行的唯一标识字段
+        toolbar: '#toolbar',       // 工具按钮容器
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        responseHandler: function (res) {
+            return {
+                "total": res.count,
+                "rows": res.data,
+            };
+        },
+        pagination: true,
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            temp['limit'] = params.limit;
+            temp['order_id'] = {$order_id};
+            temp['page'] = (params.offset / params.limit) + 1;
+            return temp;
+        },
+        sidePagination: "server",
+        pageNumber: 1,
+        pageSize: 20,
+        pageList: [20, 50, 100],
+        columns: [{
+            field: 'id',
+            title: 'ID',
+            sortable: true    // 是否排序
+        }, {
+            field: 'param',
+            title: '发送内容',
+            formatter:function (value,row,index) {
+                return htmlspecialchars(value);
+            },
+        }, {
+            field: 'return',
+            title: '返回内容',
+            formatter:function (value,row,index) {
+                return htmlspecialchars(value);
+            },
+        }, {
+            field: 'create_time',
+            title: '通知时间'
+        }],
+
+        onEditableSave: function (field, row, oldValue, $el) {
+            $.ajax({
+                type: "get",
+                url: "/admin/order.index/lst",
+                data: row,
+                dataType: 'jsonp',
+                success: function (data, status) {
+                    if (data.code == '200') {
+                        // 这里的状态显示有自定义样式区分，做单行的更新
+                        $('.example-table').bootstrapTable('updateRow', {index: row.id, row: row});
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function () {
+                    alert('修改失败，请稍后再试');
+                }
+            });
+        },
+
+        onLoadSuccess: function(data){
+            $("[data-toggle='tooltip']").tooltip();
+        }
+    });
+
+    $("#search").click(function () {
+        $('#tb_departments').bootstrapTable('refresh', {});
+    });
+    function htmlspecialchars(str) {       
+            str = str.replace(/&/g, '&amp;');  
+          str = str.replace(/</g, '&lt;');  
+          str = str.replace(/>/g, '&gt;');  
+          str = str.replace(/"/g, '&quot;');  
+          str = str.replace(/'/g, '&#039;');  
+          return str;  
+          } 
+    // 操作按钮
+    function btnGroup ()
+    {
+        let html =
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 notify-btn" title="通知一次" data-toggle="tooltip"><i class="mdi mdi-mixcloud"></i>通知</a>' +
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 supplement-btn" title="补单" data-toggle="tooltip"><i class="mdi mdi-ambulance"></i>补单</a>' +
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 callback-btn" title="通知日志" data-toggle="tooltip"><i class="mdi mdi-ambulance"></i>通知记录</a>' +
+            '<a href="#!" class="btn btn-xs btn-default del-btn" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i>删除</a>';
+        return html;
+    }
+
+    // 删除
+    function del() {
+         var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '删除提醒' ,
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/order.index/del",data={id:checkID},function (res) {
+                            if (res.status == 200){ lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    // 批量启用或者禁用
+    function isEnable(type) {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: type == 'enable' ? '选中项将全部启用，请谨慎操作!' : '选中项将全部禁用，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        if (type == 'enable')
+                        {
+                            $.post("/admin/admin.admin/enabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                            })
+                        }else
+                        {
+                            $.post("/admin/admin.admin/disabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            })
+                        }
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

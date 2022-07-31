@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>登录页面 - 派后台管理系统</title>
+    {include file="public/header" /}
+</head>
+
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="name">权限名称</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="name" value="" name="name" placeholder="请输入权限名称或者ID">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">所有</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>权限管理</h4>
+                </div>
+                <div class="card-body">
+                    <div id="toolbar2" class="toolbar-btn-action">
+                        <button type="button" class="btn btn-primary m-r-5" onclick="iframe.createIframe('添加权限','/admin/admin.admin_auth/add')"><span class="mdi mdi-plus" aria-hidden="true"></span>新增</button>
+                        <button id="btn_edit" type="button" class="btn btn-success m-r-5" onclick="isEnable('enable')">
+                            <span class="mdi mdi-check" aria-hidden="true"></span>启用
+                        </button>
+                        <button id="btn_disable" type="button" class="btn btn-warning m-r-5" onclick="isEnable('disable')">
+                            <span class="mdi mdi-block-helper" aria-hidden="true"></span>禁用
+                        </button>
+                        <button id="btn_delete" type="button" class="btn btn-danger" onclick="del()">
+                            <span class="mdi mdi-window-close" aria-hidden="true"></span>删除
+                        </button>
+                    </div>
+                    <table class="tree-table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{include file="public/footer"/}
+<!--以下是tree-grid的使用示例-->
+<link href="__ADMIN_PATH__js/jquery-treegrid/jquery.treegrid.min.css" rel="stylesheet">
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery-treegrid/jquery.treegrid.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-table/extensions/treegrid/bootstrap-table-treegrid.min.js"></script>
+<script type="text/javascript">
+    // tree-grid使用
+    var $treeTable = $('.tree-table');
+    $treeTable.bootstrapTable({
+        url: '/admin/admin.adminAuth/lst',
+        method: 'post',
+        responseHandler: function (res) {
+            return {
+                "rows": res.data,
+            };
+        },
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            return temp;
+        },
+        idField: 'id',
+        uniqueId: 'id',
+        dataType: 'json',
+        toolbar: '#toolbar2',
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        columns: [
+            {
+                field: 'check',
+                checkbox: true
+            },
+            {
+                field: 'name',
+                title: '名称'
+            },
+            {
+                field: 'id',
+                title: '权限ID'
+            },
+            {
+                field: 'icon',
+                title: '图标',
+                formatter: function (value, row, index) {
+                    return '<i class="'+value+'"></i>';
+                },
+            },
+            {
+                field: 'module',
+                title: '模板名'
+            },
+            {
+                field: 'controller',
+                title: '控制器'
+            },
+            {
+                field: 'action',
+                title: '方法名'
+            },
+            {
+                field: 'is_menu',
+                title: '是否菜单',
+                formatter: function (value, row, index) {
+                    if (value == 0) {
+                        is_checked = '';
+                    } else if (value == 1){
+                        is_checked = 'checked="checked"';
+                    }
+                    var field = "is_menu";
+                    result = '<label class="lyear-switch switch-primary lyear-status"><input type="checkbox" '+ is_checked +'><span  onClick="updateStatus('+ row.id +', '+ value +', \''+ field +'\')"></span></label>';
+                    return result;
+                },
+            },
+            {
+                field: 'rank',
+                title: '排序',
+                sortable: true,
+            },
+            {
+                field: 'status',
+                title: '状态',
+                formatter: function (value, row, index) {
+                    if (value == 0) {
+                        is_checked = '';
+                    } else if (value == 1){
+                        is_checked = 'checked="checked"';
+                    }
+                    var field = "status";
+                    result = '<label class="lyear-switch switch-primary lyear-status"><input type="checkbox" '+ is_checked +'><span  onClick="updateStatus('+ row.id +', '+ value +', \''+ field +'\')"></span></label>';
+                    return result;
+                },
+            },
+            {
+                field: 'operate',
+                title: '操作',
+                align: 'center',
+                events : {
+                    'click .role-add': function (e, value, row, index) {
+                        iframe.createIframe('添加权限','/admin/admin.admin_auth/add?pid='+row.id);
+                    },
+                    'click .role-delete': function (e, value, row, index) {
+                        $.alert({
+                            title: '系统提示',
+                            content: '删除提醒',
+                            buttons: {
+                                confirm: {
+                                    text: '确认',
+                                    btnClass: 'btn-primary',
+                                    action: function(){
+                                        $.post(url="/admin/admin.admin_auth/del",data={"id":row.id},function (res) {
+                                            if (res.status == 200) {parent.lightyear.notify('删除成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$(".tree-table").bootstrapTable('refresh');}
+                                            else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                        });
+                                    }
+                                },
+                                cancel: {
+                                    text: '取消'
+                                }
+                            }
+                        });
+                    },
+                    'click .role-edit': function (e, value, row, index) {
+                        iframe.createIframe('修改权限','/admin/admin.admin_auth/edit?id='+row.id)
+                    }
+                },
+                formatter: operateFormatter
+            }
+        ],
+        treeShowField: 'name',
+        parentIdField: 'pid',
+
+        onResetView: function(data) {
+            $treeTable.treegrid({
+                initialState: 'collapsed', // 所有节点都折叠
+                treeColumn: 1,
+                onChange: function() {
+                    $treeTable.bootstrapTable('resetWidth');
+                }
+            });
+
+            // 只展开树形的第一集节点
+            $treeTable.treegrid('getRootNodes').treegrid('expand');
+        },
+        onCheck: function(row) {
+            var datas = $treeTable.bootstrapTable('getData');
+            selectChilds(datas, row, 'id', 'pid', true);
+            selectParentChecked(datas, row, 'id', 'pid');
+            $treeTable.bootstrapTable('load', datas);
+        },
+
+        onUncheck: function(row) {
+            var datas = $treeTable.bootstrapTable('getData');
+            selectChilds(datas, row, 'id', 'pid', false);
+            $treeTable.bootstrapTable('load', datas);
+        },
+    });
+
+    // 操作按钮
+    function operateFormatter(value, row, index) {
+        return [
+            '<a type="button" class="role-add btn btn-xs btn-default m-r-5" title="编辑" data-toggle="tooltip"><i class="mdi mdi-plus"></i></a>',
+            '<a type="button" class="role-edit btn btn-xs btn-default m-r-5" title="修改" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>',
+            '<a type="button" class="role-delete btn btn-xs btn-default" title="删除" data-toggle="tooltip"><i class="mdi mdi-delete"></i></a>'
+        ].join('');
+    }
+
+    /**
+     * 选中父项时，同时选中子项
+     * @param datas 所有的数据
+     * @param row 当前数据
+     * @param id id 字段名
+     * @param pid 父id字段名
+     */
+    function selectChilds(datas,row,id,pid,checked) {
+        for(var i in datas){
+            if(datas[i][pid] == row[id]){
+                datas[i].check=checked;
+                selectChilds(datas,datas[i],id,pid,checked);
+            };
+        }
+    }
+
+    function selectParentChecked(datas,row,id,pid){
+        for(var i in datas){
+            if(datas[i][id] == row[pid]){
+                datas[i].check=true;
+                selectParentChecked(datas,datas[i],id,pid);
+            };
+        }
+    }
+
+    function updateStatus(id, value,field) {
+        var newstate = (value == 1) ? 0 : 1; // 发送参数值跟当前参数值相反
+        $.ajax({
+            type: "post",
+            url: "/admin/admin.admin_auth/field?id="+id,
+            data: {field: field, value: newstate},
+            dataType: 'json',
+            success: function (res) {
+                if (res.status == 200) {parent.lightyear.notify('修改成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$(".tree-table").bootstrapTable('refresh');}
+                else parent.lightyear.notify('修改失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+            },
+            error: function () {
+                parent.lightyear.notify('修改失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+            }
+        });
+    }
+
+    // 删除
+    function del() {
+        var checkID = "";
+        var selectedItem = $treeTable.bootstrapTable('getSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '选中项将全部被删除，请谨慎操作!' ,
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/admin.admin_auth/del",data={id:checkID},function (res) {
+                            if (res.status == 200){ lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    // 批量启用或者禁用
+    function isEnable(type) {
+        var checkID = "";
+        var selectedItem = $treeTable.bootstrapTable('getSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: type == 'enable' ? '选中项将全部启用，请谨慎操作!' : '选中项将全部禁用，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        if (type == 'enable')
+                        {
+                            $.post("/admin/admin.admin_auth/enabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                            })
+                        }else
+                        {
+                            $.post("/admin/admin.admin_auth/disabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            })
+                        }
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+    $("#search").click(function () {
+        $treeTable.bootstrapTable('refresh', {});
+    });
+</script>
+</body>
+</html>

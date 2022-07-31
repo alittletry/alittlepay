@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>登录页面 - 派后台管理系统</title>
+    <link rel="icon" href="__ADMIN_PATH__favicon.ico" type="image/ico">
+    <meta name="keywords" content="派后台管理系统">
+    <meta name="description" content="派后台管理系统">
+    <meta name="author" content="yinqi">
+    <link href="__ADMIN_PATH__css/bootstrap.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/animate.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/style.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__js/bootstrap-table/bootstrap-table.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.css">
+    <script type="text/javascript" src="__ADMIN_PATH__js/iframe.js"></script>
+</head>
+
+<body>
+<div class="container-fluid p-t-15">
+
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>角色管理</h4>
+                </div>
+                <div class="card-body">
+                    <div id="toolbar2" class="toolbar-btn-action">
+                        <button type="button" class="btn btn-primary m-r-5" onclick="iframe.createIframe('添加角色','/admin/admin.admin_role/add')"><span class="mdi mdi-plus" aria-hidden="true"></span>新增</button>
+                    </div>
+                    <table class="tree-table"></table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/perfect-scrollbar.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-table/bootstrap-table.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-table/bootstrap-table-zh-CN.min.js"></script>
+
+<!--行内编辑插件-->
+<link href="__ADMIN_PATH__js/x-editable/1.5.1/bootstrap3-editable/css/bootstrap-editable.min.css" rel="stylesheet">
+<script type="text/javascript" src="__ADMIN_PATH__js/x-editable/1.5.1/bootstrap3-editable/js/bootstrap-editable.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-table/extensions/editable/bootstrap-table-editable.min.js"></script>
+<script src="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/main.min.js"></script>
+
+
+<!--以下是tree-grid的使用示例-->
+<link href="__ADMIN_PATH__js/jquery-treegrid/jquery.treegrid.min.css" rel="stylesheet">
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery-treegrid/jquery.treegrid.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-table/extensions/treegrid/bootstrap-table-treegrid.min.js"></script>
+<script type="text/javascript">
+    // tree-grid使用
+    var $treeTable = $('.tree-table');
+    $treeTable.bootstrapTable({
+        url: '/admin/admin.admin_role/lst',
+        responseHandler: function (res) {
+            return {
+                "rows": res.data,
+            };
+        },
+        idField: 'id',
+        uniqueId: 'id',
+        dataType: 'json',
+        toolbar: '#toolbar2',
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        columns: [
+            {
+                field: 'check',
+                checkbox: true
+            },
+            {
+                field: 'name',
+                title: '名称'
+            },
+            {
+                field: 'id',
+                title: '角色ID'
+            },
+            {
+                field: 'auth',
+                title: '权限ID'
+            },
+            {
+                field: 'rank',
+                title: '排序',
+                sortable: true,
+            },
+            {
+                field: 'status',
+                title: '状态',
+                formatter: function (value, row, index) {
+                    if (value == 0) {
+                        is_checked = '';
+                    } else if (value == 1){
+                        is_checked = 'checked="checked"';
+                    }
+                    var field = "status";
+                    result = '<label class="lyear-switch switch-primary lyear-status"><input type="checkbox" '+ is_checked +'><span  onClick="updateStatus('+ row.id +', '+ value +', \''+ field +'\')"></span></label>';
+                    return result;
+                },
+            },
+            {
+                field: 'operate',
+                title: '操作',
+                align: 'center',
+                events : {
+                    'click .role-add': function (e, value, row, index) {
+                        iframe.createIframe('添加权限','/admin/admin.admin_role/add?pid='+row.id);
+                    },
+                    'click .role-delete': function (e, value, row, index) {
+                        $.alert({
+                            title: '系统提示',
+                            content: '删除提醒',
+                            buttons: {
+                                confirm: {
+                                    text: '确认',
+                                    btnClass: 'btn-primary',
+                                    action: function(){
+                                        $.post(url="/admin/admin.admin_role/del",data={"id":row.id},function (res) {
+                                            if (res.status == 200) {parent.lightyear.notify('删除成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$(".tree-table").bootstrapTable('refresh');}
+                                            else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                        });
+                                    }
+                                },
+                                cancel: {
+                                    text: '取消'
+                                }
+                            }
+                        });
+                    },
+                    'click .role-edit': function (e, value, row, index) {
+                        iframe.createIframe('修改权限','/admin/admin.admin_role/edit?id='+row.id)
+                    }
+                },
+                formatter: operateFormatter
+            }
+        ],
+
+        treeShowField: 'name',
+        parentIdField: 'pid',
+
+        onResetView: function(data) {
+            $treeTable.treegrid({
+                initialState: 'collapsed', // 所有节点都折叠
+                treeColumn: 1,
+                //expanderExpandedClass: 'mdi mdi-folder-open',  // 可自定义图标样式
+                //expanderCollapsedClass: 'mdi mdi-folder',
+                onChange: function() {
+                    $treeTable.bootstrapTable('resetWidth');
+                }
+            });
+
+            // 只展开树形的第一集节点
+            $treeTable.treegrid('getRootNodes').treegrid('expand');
+        },
+        onCheck: function(row) {
+            var datas = $treeTable.bootstrapTable('getData');
+
+            selectChilds(datas, row, 'id', 'pid', true); // 选择子类
+
+            selectParentChecked(datas, row, 'id', 'pid'); // 选择父类
+
+            $treeTable.bootstrapTable('load', datas);
+        },
+
+        onUncheck: function(row) {
+            var datas = $treeTable.bootstrapTable('getData');
+            selectChilds(datas, row, 'id', 'pid', false);
+            $treeTable.bootstrapTable('load', datas);
+        },
+    });
+
+    // 操作按钮
+    function operateFormatter(value, row, index) {
+        return [
+            '<a type="button" class="role-add btn btn-xs btn-default m-r-5" title="编辑" data-toggle="tooltip"><i class="mdi mdi-plus"></i></a>',
+            '<a type="button" class="role-edit btn btn-xs btn-default m-r-5" title="修改" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>',
+            '<a type="button" class="role-delete btn btn-xs btn-default" title="删除" data-toggle="tooltip"><i class="mdi mdi-delete"></i></a>'
+        ].join('');
+    }
+
+    /**
+     * 选中父项时，同时选中子项
+     * @param datas 所有的数据
+     * @param row 当前数据
+     * @param id id 字段名
+     * @param pid 父id字段名
+     */
+    function selectChilds(datas,row,id,pid,checked) {
+        for(var i in datas){
+            if(datas[i][pid] == row[id]){
+                datas[i].check=checked;
+                selectChilds(datas,datas[i],id,pid,checked);
+            };
+        }
+    }
+
+    function selectParentChecked(datas,row,id,pid){
+        for(var i in datas){
+            if(datas[i][id] == row[pid]){
+                datas[i].check=true;
+                selectParentChecked(datas,datas[i],id,pid);
+            };
+        }
+    }
+
+    function updateStatus(id, value, field) {
+        var newstate = (value == 1) ? 0 : 1; // 发送参数值跟当前参数值相反
+        $.ajax({
+            type: "post",
+            url: "/admin/admin.admin_role/field?id="+id,
+            data: {field: field, value: newstate},
+            dataType: 'json',
+            success: function (res) {
+                if (res.status == 200) {parent.lightyear.notify('修改成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$(".tree-table").bootstrapTable('refresh');}
+                else parent.lightyear.notify('修改失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+            },
+            error: function () {
+                parent.lightyear.notify('修改失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+            }
+        });
+    }
+
+    function test() {
+        var selRows = $treeTable.bootstrapTable("getSelections");
+        if(selRows.length == 0){
+            alert("请至少选择一行");
+            return;
+        }
+        console.log(selRows);
+
+        var postData = "";
+        $.each(selRows,function(i) {
+            postData +=  this.id;
+            if (i < selRows.length - 1) {
+                postData += "， ";
+            }
+        });
+        alert("你选中行的 id 为："+postData);
+    }
+</script>
+</body>
+</html>

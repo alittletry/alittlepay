@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>用户管理 - 派后台管理系统</title>
+    {include file="public/header" /}
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="name">账号昵称</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="name" value="" name="name" placeholder="请输入账号或者昵称搜索">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="tel">电话邮箱</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="tel" value="" name="tel" placeholder="请输入电话或者邮箱">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="start_time">创建时间</label>
+                            <div class="input-group">
+                                <input class="form-control js-datetimepicker" type="text" id="start_time" name="start_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="开始时间">
+                                <span class="input-group-addon">~</span>
+                                <input class="form-control js-datetimepicker" type="text" name="end_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="role_id">角色类型</label>
+                            <select name="role_id" id="role_id" class="form-control">
+                                <option value="">所有</option>
+                                {volist name="auths" id="vo"}
+                                <option value="{$vo.id}">{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">所有</option>
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>用户管理</h4></div>
+                <div class="card-body">
+                    <div id="toolbar" class="toolbar-btn-action">
+                        <button id="btn_add" type="button" class="btn btn-primary m-r-5" onclick="iframe.createIframe('添加用户','/admin/admin.admin/add')">
+                            <span class="mdi mdi-plus" aria-hidden="true"></span>新增
+                        </button>
+                        <button id="btn_edit" type="button" class="btn btn-success m-r-5" onclick="isEnable('enable')">
+                            <span class="mdi mdi-check" aria-hidden="true"></span>启用
+                        </button>
+                        <button id="btn_disable" type="button" class="btn btn-warning m-r-5" onclick="isEnable('disable')">
+                            <span class="mdi mdi-block-helper" aria-hidden="true"></span>禁用
+                        </button>
+                        <button id="btn_delete" type="button" class="btn btn-danger" onclick="del()">
+                            <span class="mdi mdi-window-close" aria-hidden="true"></span>删除
+                        </button>
+                    </div>
+                    <table id="tb_departments"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer"/}
+<script type="text/javascript">
+    $('#tb_departments').bootstrapTable({
+        classes: 'table table-bordered table-hover table-striped',
+        url: '/admin/admin.admin/lst',
+        method: 'post',
+        dataType : 'json',        // 因为本示例中是跨域的调用,所以涉及到ajax都采用jsonp,
+        uniqueId: 'id',
+        idField: 'id',             // 每行的唯一标识字段
+        toolbar: '#toolbar',       // 工具按钮容器
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        responseHandler: function (res) {
+            return {
+                "total": res.count,
+                "rows": res.data,
+            };
+        },
+        pagination: true,
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            temp['limit'] = params.limit;
+            temp['page'] = (params.offset / params.limit) + 1;
+            return temp;
+        },
+        sidePagination: "server",
+        pageNumber: 1,
+        pageSize: 20,
+        pageList: [20, 50, 100],
+        columns: [{
+            checkbox: true    // 是否显示复选框
+        }, {
+            field: 'id',
+            title: 'ID',
+            sortable: true    // 是否排序
+        }, {
+            field: 'name',
+            title: '账号'
+        }, {
+            field: 'nickname',
+            title: '昵称',
+        }, {
+            field: 'avatar',
+            title: '头像',
+            formatter:function (value,row,index) {
+                return '<img src="'+value+'" style="width: 64px;"/>';
+            },
+        }, {
+            field: 'role_id',
+            title: '角色类型'
+        }, {
+            field: 'tel',
+            title: '电话'
+        }, {
+            field: 'mail',
+            title: '邮箱'
+        }, {
+            field: 'create_time',
+            title: '创建时间'
+        }
+        , {
+            field: 'status',
+            title: '状态',
+            formatter:function (value,row,index) {
+                return value === 1 ? '启用' : '冻结';
+            },
+        }, {
+            field: 'operate',
+            title: '操作',
+            formatter: btnGroup,  // 自定义方法
+            events: {
+                'click .edit-btn': function (event, value, row, index) {
+                    iframe.createIframe('修改用户','/admin/admin.admin/edit?id='+row.id)
+                },
+                'click .del-btn': function (event, value, row, index) {
+                    $.alert({
+                        title: '系统提示',
+                        content: '删除提醒',
+                        buttons: {
+                            confirm: {
+                                text: '确认',
+                                btnClass: 'btn-primary',
+                                action: function(){
+                                    $.post(url="/admin/admin.admin/del",data={"id":row.id},function (res) {
+                                        if (res.status == 200) {parent.lightyear.notify('删除成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$("#tb_departments").bootstrapTable('refresh');}
+                                        else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: '取消'
+                            }
+                        }
+                    });
+                }
+            }
+        }],
+
+        onEditableSave: function (field, row, oldValue, $el) {
+            $.ajax({
+                type: "get",
+                url: "/admin/admin.admin/lst",
+                data: row,
+                dataType: 'jsonp',
+                success: function (data, status) {
+                    if (data.code == '200') {
+                        // 这里的状态显示有自定义样式区分，做单行的更新
+                        $('.example-table').bootstrapTable('updateRow', {index: row.id, row: row});
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function () {
+                    alert('修改失败，请稍后再试');
+                }
+            });
+        },
+
+        onLoadSuccess: function(data){
+            $("[data-toggle='tooltip']").tooltip();
+        }
+    });
+
+    $("#search").click(function () {
+        $('#tb_departments').bootstrapTable('refresh', {});
+    });
+
+    // 操作按钮
+    function btnGroup ()
+    {
+        let html =
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 edit-btn" title="编辑" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>' +
+            '<a href="#!" class="btn btn-xs btn-default del-btn" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i></a>';
+        return html;
+    }
+
+    // 删除
+    function del() {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '选中项将全部被删除，请谨慎操作!' ,
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/admin.admin/del",data={id:checkID},function (res) {
+                            if (res.status == 200){ lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    // 批量启用或者禁用
+    function isEnable(type) {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: type == 'enable' ? '选中项将全部启用，请谨慎操作!' : '选中项将全部禁用，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        if (type == 'enable')
+                        {
+                            $.post("/admin/admin.admin/enabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                            })
+                        }else
+                        {
+                            $.post("/admin/admin.admin/disabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            })
+                        }
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

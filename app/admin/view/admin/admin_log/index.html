@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>操作日志 - 派后台管理系统</title>
+    {include file="public/header" /}
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm">
+                        <div class="form-group">
+                            <label for="name">操作人</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="name" value="{$where['name']}" name="name" placeholder="请输入操作人名称，ID">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="ip">来访IP</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="ip" value="{$where['ip']}" name="ip" placeholder="IP地址">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="start_time">操作时间</label>
+                            <div class="input-group">
+                                <input class="form-control js-datetimepicker" type="text" id="start_time" name="start_time" value="{$where['start_time']}" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="开始时间">
+                                <span class="input-group-addon">~</span>
+                                <input class="form-control js-datetimepicker" type="text" name="end_time" value="{$where['end_time']}" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-toolbar clearfix">
+                    <div class="toolbar-btn-action">
+                        <a class="btn btn-warning" href="#!" onclick="delSelect()"><i class="mdi mdi-window-close"></i> 删除</a>
+                        <a class="btn btn-danger" href="#!" onclick="delAll()"><i class="mdi mdi-window-close"></i> 全部删除</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>
+                                    <label class="lyear-checkbox checkbox-primary">
+                                        <input type="checkbox" id="check-all"><span></span>
+                                    </label>
+                                </th>
+                                <th>序号</th>
+                                <th>操作人</th>
+                                <th>操作名称</th>
+                                <th>IP</th>
+                                <th>User Agent</th>
+                                <th>操作时间</th>
+                                <th>操作</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {volist name='list' id='item'}
+                                <tr>
+                                    <td>
+                                        <label class="lyear-checkbox checkbox-primary">
+                                            <input type="checkbox" name="ids[]" value="{$item.id}"><span></span>
+                                        </label>
+                                    </td>
+                                    <td>{$item.id}</td>
+                                    <td>{$item.admin_name}</td>
+                                    <td>{$item.name}</td>
+                                    <td>{$item.ip}</td>
+                                    <td>{$item.user_agent}</td>
+                                    <td>{$item.create_time|date='Y-m-d H:i:s'}</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a class="btn btn-xs btn-default" href="#!" title="删除" data-toggle="tooltip" onclick="delOne('{$item.id}')"><i class="mdi mdi-window-close"></i></a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {/volist}
+                            </tbody>
+                        </table>
+                    </div>
+                    {$list|raw}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer" /}
+<script type="text/javascript">
+    function delOne(id) {
+        $.confirm({
+            title: '重要提醒!',
+            content: '删除后将不可恢复，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/admin.admin_log/del",data={id:id},function (res) {
+                            if (res.status == 200) lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            location.reload();
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+    function delAll() {
+        $.confirm({
+            title: '重要提醒!',
+            content: '清空后将不可恢复，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/admin.admin_log/empty",data={},function (res) {
+                            if (res.status == 200) lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            location.reload();
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    function delSelect() {
+        var checkID = "";
+        $("input[name='ids[]']:checked").each(function(i){
+            checkID += $(this).val()+",";
+        });
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '选中项删除后将不可恢复，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/admin.admin_log/del",data={id:checkID},function (res) {
+                            if (res.status == 200) { lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

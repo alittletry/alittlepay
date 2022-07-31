@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>选择图片 - 派后台管理系统</title>
+    <link rel="icon" href="__ADMIN_PATH__favicon.ico" type="image/ico">
+    <meta name="keywords" content="派后台管理系统">
+    <meta name="description" content="派后台管理系统">
+    <meta name="author" content="cfn">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/bootstrap-treeview/bootstrap.min.css">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.css">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/bootstrap-treeview/bootstrap-treeview.min.css">
+    <script type="text/javascript" src="__ADMIN_PATH__js/iframe.js"></script>
+    <style>
+        .list-group-item{
+            border: 0px !important;
+            padding: 5px 10px;
+        }
+        #tree{
+            height: 390px;
+            overflow-y: scroll;
+            border-right: 1px solid #ccc;
+            margin-top: 10px;
+        }
+        #tree::-webkit-scrollbar{
+            width: 4px;
+        }
+        #tree::-webkit-scrollbar-thumb{
+            border-radius: 10px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.2);
+        }
+        #tree::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+            border-radius: 0;
+            background: rgba(0,0,0,0.1);
+        }
+        .form-control2{
+            display: block;
+            width: 100%;
+            height: 28px;
+            padding: 2px 6px;
+            font-size: 12px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        .btn{
+            padding: 3px 8px;
+        }
+        .cart-item{
+            height: 110px;
+            padding: 5px;
+            text-align: center;
+            line-height: 80px;
+        }
+        .cart-item-image{
+            max-width: 100%;
+            max-height:100%;
+            margin: 0 auto;
+        }
+        .btn-round {
+            -webkit-border-radius: 1rem;
+        }
+        .btn-success {
+            background-color: #15c377;
+            border-color: #15c377;
+            color: #fff!important;
+        }
+        .btn-info {
+            background-color: #48b0f7;
+            border-color: #48b0f7;
+            color: #fff!important;
+        }
+        .btn-danger {
+            background-color: #f96868;
+            border-color: #f96868;
+            color: #fff!important;
+        }
+        .checkedItem{
+            border: 2px solid #f96868;
+            padding: 5px;
+        }
+        .pageination_align > li > a{
+            margin: 0 3px;
+        }
+        .pageination_align > .active > a, .pagination > .active > a:focus, .pagination > .active > a:hover, .pagination > .active > span, .pagination > .active > span:focus, .pagination > .active > span:hover {
+            background-color: #33cabb;
+            border-color: #33cabb;
+        }
+        .pageination_align{
+            margin: 19px 0 0 0;
+            float: right;
+        }
+        .pageination_align {
+            text-align: center
+        }
+
+        .pageination {
+            color: #48576a;
+            font-size: 12px;
+            display: inline-block;
+            user-select: none;
+        }
+
+        .pagination_page {
+            padding: 0 4px;
+            border: 1px solid #d1dbe5;
+            border-right: 0;
+            background: #fff;
+            font-size: 13px;
+            min-width: 28px;
+            height: 28px;
+            line-height: 28px;
+            cursor: pointer;
+            box-sizing: border-box;
+            text-align: center;
+            float: left;
+        }
+
+        .pagination_page_right {
+            border-right: 1px solid #d1dbe5;
+        }
+
+        .pagination_page:hover {
+            color: #20a0ff;
+        }
+
+        .disabled {
+            color: #e4e4e4 !important;
+            background-color: #fff;
+            cursor: not-allowed;
+        }
+
+        .pagination_page_active {
+            border-color: #20a0ff;
+            background-color: #20a0ff;
+            color: #fff !important;;
+            cursor: default;
+        }
+
+    </style>
+</head>
+<body>
+<div class="container-fluid p-t-15" id="app">
+    <div class="row">
+        <div class="col-xs-3">
+            <div id="box-left">
+                <input type="text" class="form-control2" id="search" placeholder="一级分类名称" @change="tree()">
+                <div id="tree"></div>
+            </div>
+        </div>
+        <div class="col-xs-9">
+            <div class="card">
+                <div class="card-header">
+                    <a class="btn btn-round btn-success" @click="events('addCategory')">添加分类</a>
+                    <a class="btn btn-round btn-info" @click="events('editCategory')">修改分类</a>
+                    <a class="btn btn-round btn-danger" @click="events('delCategory')">删除分类</a>
+                    <a class="btn btn-round btn-success" @click="events('uploadImage')">上传图片</a>
+                    <a class="btn btn-round btn-info" @click="events('moveImage')">移动图片</a>
+                    <a class="btn btn-round btn-danger" @click="events('delImage')">删除图片</a>
+                    <a class="btn btn-round btn-info" @click="events('choice')">确定选择</a>
+                </div>
+                <div class="card-body" style="margin-top: 20px;height: 340px;">
+                    <div class="row">
+                        <div v-for="(image,index) in imageList" class="col-xs-3 cart-item"  :class="image.isSelect ? 'checkedItem': '' ">
+                            <img :src="image.path" class="cart-item-image" @click="changImage(image,index)">
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <pageination :total="model.total" :size="model.size" :page="model.page" :changge="pageFn" ></pageination>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input id="fileUpload" type="file" name="file" style="display: none;" @change="upload" accept="image/*">
+</div>
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-notify.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/lightyear.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-treeview/bootstrap-treeview.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/vue/vue.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/vue-page/pageination.js"></script>
+<script>
+    let id='',pid=0;
+    let parentinputname = '{$Request.param.fodder}';
+    let choices = [];
+    let limit = '{$Request.param.limit}';
+    var vm = new Vue({
+        el: "#app",
+        data() {
+            return {
+                imageList:[],
+                checkedImage:[],
+                checkedImageId:[],
+                model:{
+                    total:12,
+                    size:12,
+                    page:1,
+                }
+            }
+        },
+        watch:{
+            page:function () {
+                this.getImageList();
+            },
+        },
+        mounted: function() {
+            this.tree();
+            this.getImageList();
+        },
+        methods:{
+            pageFn(val){
+                this.model.page=val;
+                this.getImageList(val);
+            },
+            tree: function ()
+            {
+                const that = this;
+                $.post(url = "/admin/widget.images/category", data = {'title':$('#search').val()}, function (res) {
+                    if (res.status === 200) {
+                        $('#tree').treeview({
+                            expandIcon: 'glyphicon glyphicon-chevron-right',
+                            collapseIcon: 'glyphicon glyphicon-chevron-down',
+                            selectedColor: '#ff0000',
+                            selectedBackColor: null,
+                            onhoverColor: null,
+                            data: res.data,
+                            levels:0
+                        });
+                        // 选中节点
+                        $('#tree').on('nodeSelected', function (event, data) {
+                            console.log(data);
+                            id = data.id;
+                            pid = data.pid;
+                            that.getImageList();
+                            that.checkedImageId.length = 0;
+                            that.checkedImage.length = 0;
+                            that.model.page = 1;
+                        });
+                        // 取消选中
+                        $('#tree').on('nodeUnselected', function (event, data) {
+                            id = '';
+                            pid = 0;
+                            that.getImageList();
+                        });
+                    }
+                });
+            },
+            events: function (type)
+            {
+                const that = this;
+                switch (type)
+                {
+                    case 'addCategory':
+                        iframe.createIframe('添加分类','/admin/widget.images/addCategory?id='+id+'&pid='+pid,{height:'215px;'});
+                        break;
+                    case 'editCategory':
+                        if (id == '') return lightyear.notify('未选择分类', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        iframe.createIframe('修改分类','/admin/widget.images/editCategory?id='+id+'&pid='+pid,{height:'215px;'});
+                        break;
+                    case 'delCategory':
+                        if (id == '') return lightyear.notify('未选择分类', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        $.get(url = "/admin/widget.images/delCategory", data = {id:id}, function (res) {
+                            if (res.status === 200 || res.code === 200) {
+                                lightyear.notify(res.msg, 'success', 1000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                return tree();
+                            }
+                            else return lightyear.notify(res.msg, 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        });
+                        break;
+                    case 'uploadImage':
+                        if (id == '') return lightyear.notify('请选择上传的目录', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        $("#fileUpload").click();
+                        break;
+                    case 'moveImage':
+                        if (this.checkedImageId.length <= 0) return lightyear.notify('未选择图片', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        iframe.createIframe('修改图片分类','/admin/widget.images/editImage?id='+this.checkedImageId[this.checkedImageId.length-1],{height:'215px;'});
+                        break;
+                    case 'delImage':
+                        if (this.checkedImageId.length <= 0) return lightyear.notify('未选择图片', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        $.get(url = "/admin/widget.images/delImage", data = {id:this.checkedImageId[this.checkedImageId.length-1]}, function (res) {
+                            if (res.status === 200 || res.code === 200) {
+                                lightyear.notify(res.msg, 'success', 1000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                that.checkedImageId.length--;
+                                that.checkedImage.length--;
+                                that.getImageList();
+                            }
+                            else return lightyear.notify(res.msg, 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        });
+                        break;
+                    case 'choice':
+                        parent.$f.changeField(parentinputname,this.checkedImage);
+                        parent.$f.closeModal(parentinputname);
+                        break;
+                }
+            },
+            upload:function ()
+            {
+                const that = this;
+                if (!$("#fileUpload").val()) return;
+                var formData = new FormData();
+                formData.append("file", $("#fileUpload")[0].files[0]);
+                formData.append("cid",id);
+                $.ajax({
+                    type: "POST",
+                    url: "/admin/widget.files/image",
+                    enctype: 'multipart/form-data',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (res) {
+                        if (res.code == 200) that.getImageList();
+                    }
+                });
+            },
+            getImageList:function (page = 1)
+            {
+                const th = this;
+                $.post(url="/admin/widget.images/getImageList",data={cid:id,page:page,limit:th.model.size},function (res) {
+                    if (res.code == 0) {
+                        th.imageList = res.data;
+                        th.model.total = res.count;
+                    }
+                });
+            },
+            changImage: function(item,index)
+            {
+                if ($.inArray(item.path,this.checkedImage)>=0)
+                {
+                    this.checkedImageId.remove(item.id)
+                    this.checkedImage.remove(item.path);
+                }else
+                {
+                    if (this.checkedImage.length >= limit) return lightyear.notify('不能再选了，最多只能选'+limit+'个', 'danger', 1000, 'mdi mdi-emoticon-neutral', 'top', 'center');;
+                    this.checkedImageId.push(item.id);
+                    this.checkedImage.push(item.path);
+                }
+                this.$set(this.imageList[index],'isSelect',item.isSelect == undefined ? true : !item.isSelect);
+            }
+        }
+    });
+    Array.prototype.remove = function(val) {
+        var index = this.indexOf(val);
+        if (index > -1) {
+            this.splice(index, 1);
+        }
+    }
+</script>
+</body>
+</html>

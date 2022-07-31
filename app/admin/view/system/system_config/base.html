@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>网站配置 - 派后台管理系统</title>
+    <link rel="icon" href="__ADMIN_PATH__favicon.ico" type="image/ico">
+    <meta name="keywords" content="派后台管理系统">
+    <meta name="description" content="派后台管理系统">
+    <meta name="author" content="cfn">
+    <link href="__ADMIN_PATH__css/bootstrap.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="__ADMIN_PATH__css/style.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.css">
+    <style>
+        .none{display:none;}
+    </style>
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <ul class="nav nav-tabs page-tabs">
+                    <li {eq name="tab_id" value="1"}class="active"{/eq}><a href="/admin/system.system_config/base?tab_id=1">基本</a></li>
+                    <li {eq name="tab_id" value="2"}class="active"{/eq}><a href="/admin/system.system_config/base?tab_id=2">上传</a></li>
+                    <li {eq name="tab_id" value="4"}class="active"{/eq}><a href="/admin/system.system_config/base?tab_id=4">邮件</a></li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active">
+                        <form name="edit-form" id="edit-form" class="edit-form" onsubmit="return toSubmit()">
+                            {volist name="system" id="vo"}
+                            {switch $vo.tag_type}
+                            {case textarea}
+                            <div class="form-group">
+                                <label for="{$vo.form_name}">{$vo.name}</label>
+                                <textarea class="form-control" id="{$vo.form_name}" rows="5" name="{$vo.form_name}" placeholder="请输入{$vo.name}" >{$vo.value}</textarea>
+                                <small class="help-block">{$vo.remark}</small>
+                            </div>
+                            {/case}
+                            {case select}
+                            {/case}
+                            {default/}
+                            <div class="form-group">
+                                <label for="web_site_title">{$vo.name}</label>
+                                {switch $vo.form_type}
+                                {case file}
+                                <div class="input-group">
+                                    <input type="text" class="form-control" name="{$vo.form_name}" id="{$vo.form_name}" value="{$vo.value}" />
+                                    <input type="file" id="file{$vo.form_name}" style="display: none;" onchange="upload('{$vo.form_name}')"/>
+                                    <div class="input-group-btn"><button class="btn btn-success" type="button" for-input="{$vo.form_name}" onclick="btnClick('{$vo.form_name}')">上传</button></div>
+                                </div>
+                                {/case}
+                                {case radio}
+                                <div class="controls-box">
+                                    {php}
+                                    foreach(explode("\n",$vo['param']) as $k=>$v)
+                                    {
+                                    $tmp = explode("=>",$v);
+                                    $checked = $tmp[0] == $vo["value"] ? 'checked' : '';
+                                    echo '<label class="lyear-radio radio-inline radio-primary">
+                                            <input type="radio" name="'.$vo["form_name"].'" value="'.$tmp[0].'" '.$checked.'><span>'.$tmp[1].'</span>
+                                        </label>';
+                                    }
+                                    {/php}
+                                </div>
+                                {/case}
+                                {default/}
+                                <input class="form-control" type="{$vo.form_type}" id="web_site_title" name="{$vo.form_name}" value="{$vo.value}" placeholder="请输入{$vo.name}" >
+                                {/switch}
+                                <small class="help-block" style="color: #da6565;">{$vo.remark}</small>
+                            </div>
+                            {/switch}
+                            {/volist}
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary m-r-5">确 定</button>
+                            </div>
+                            <div class="form-group none" {eq name="tab_id" value="4"}style="display:block"{/eq}>
+                                <button type="button" onclick="test_email()" class="btn btn-primary m-r-5">测试发送</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="text/javascript" src="__ADMIN_PATH__js/jquery.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/main.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/bootstrap-notify.min.js"></script>
+<script type="text/javascript" src="__ADMIN_PATH__js/lightyear.js"></script>
+<script src="__ADMIN_PATH__js/jconfirm/jquery-confirm.min.js"></script>
+<script>
+    /**
+     * 选择文件
+     * @param inputName
+     */
+    function btnClick(inputName) {
+        $("#file"+inputName).click()
+    }
+    /**
+     * 异步上传
+     * @param inputName
+     */
+    function upload(inputName) {
+        var formData = new FormData();
+        formData.append("file",$("#file"+inputName)[0].files[0]);
+        formData.append("cid",0);
+        formData.append("storage",1);
+        $.ajax({
+            type:'POST',
+            url:'/admin/widget.files/file',
+            data: formData,
+            cache: false,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                $("#"+inputName).val(res.data.filePath);
+            }
+        });
+    }
+    /**
+     * 提交表单
+     */
+    function toSubmit(){
+        $.post(
+            url = '/admin/system.system_config/ajaxSave',
+            data = $("#edit-form").serializeArray(),
+            function (res) {
+                //if (!Array.isArray(res)) res = jQuery.parseJSON(res);
+                if (res.status === 200 || res.code === 200) lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+            }
+        );
+        return false;
+    }
+    function test_email(){
+        $.post(
+            url = '/admin/system.system_config/testemail',
+            data = {},
+            function (res) {
+                //if (!Array.isArray(res)) res = jQuery.parseJSON(res);
+                if (res.status === 200 || res.code === 200) lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                else lightyear.notify(res.msg, 'danger', 10000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+            }
+        );
+    }
+</script>
+</body>
+</html>

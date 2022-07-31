@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>
+			在线支付 - {$data.type==='alipay'?'支付宝':'微信'} - 网上支付 安全快速！
+		</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+		<style>
+			body{background:#f2f2f4;} body,html{width:100%;height:100%;} *,:after,:before{box-sizing:border-box;}
+			*{margin:0;padding:0;} img{max-width:100%;} #header{height:60px;border-bottom:2px
+			solid #eee;background-color:#fff;text-align:center;line-height:60px;} #header
+			h1{font-size:20px;} #main{overflow:hidden;margin:0 auto;padding:20px;padding-top:80px;width:992px;max-width:100%;}
+			#main .left{float:left;width:40%;box-shadow:0 0 60px #b5f1ff;} .left p{margin:10px
+			auto;} .make{padding-top:15px;border-radius:10px;background-color:#fff;box-shadow:0
+			3px 3px 0 rgba(0,0,0,.05);color:#666;text-align:center;transition:all .2s
+			linear;} .make .qrcode{margin:auto;} .make .money{margin-bottom:0;color:#f44336;font-weight:600;font-size:25px;}
+			.info{padding:15px;width:100%;border-radius:0 0 10px 10px;background:#32343d;color:#f2f2f2;text-align:center;font-size:14px;}
+			#main .right{float:right;padding-top:25px;width:60%;color:#ccc;text-align:center;}
+			@media (max-width:768px){ #main{padding-top:30px;} #main .left{width:100%;}
+			#main .right{display:none;} }
+		</style>
+		<link rel="stylesheet" type="text/css" href="/static/index/js/qrcode.css">
+	</head>
+	<body>
+		<div id="main">
+			<div class="left">
+				<div class="make">
+					<p>
+						<img src="/static/index/image/{$data.type}-logo.png" alt="" style="height:30px;">
+					</p>
+					<p>
+						商品名称：{$data.name}
+					</p>
+					<font face="微软雅黑" size="+1" color="#FF000">
+						按照以下金额付款，否则无法识别到账
+					</font>
+					<br/>
+					<p class="money" id="price" style="font-weight:bold; color:green">
+						请稍等...
+					</p>
+					<center>
+						<p class="qrcode" id="qrcode">
+							<img id="qrcode_load" src="/static/index/image/loading.gif" style="display: block;">
+						</p>
+					</center>
+					<center>
+						<a id="alipayh5url_1">
+						</a>
+						<a id="alipayh5url_2">
+						</a>
+					</center>
+					<div class="info">
+						<p>
+							<font color="#FF0000" size="+1">
+								请点击二维码然后长按保存再扫一扫
+							</font>
+						</p>
+						<p id="divTime">
+							正在获取二维码,请稍等...
+						</p>
+						<p>
+							商户订单号：{$data.out_trade_no}
+						</p>
+						<p>
+							请使用{$data.type==='alipay'?'支付宝':'微信'}扫一扫
+						</p>
+					</div>
+				</div>
+			</div>
+			<div class="right">
+				<img src="/static/index/image/{$data.type}-sys.png" alt="">
+			</div>
+		</div>
+		<script type="text/javascript" src="/static/index/js/clipboard.min.js">
+		</script>
+		<script type="text/javascript" src="/static/index/js/qrcode.min.js">
+		</script>
+		<script type="text/javascript" src="/static/index/js/jquery.min.js">
+		</script>
+		<script type="text/javascript" src="/static/index/js/layer.js">
+		</script>
+		<script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.0.0.js">
+		</script>
+		<script>
+			function onBridgeReady() {
+    WeixinJSBridge.call('hideOptionMenu');
+}
+if (typeof WeixinJSBridge == "undefined") {
+    if (document.addEventListener) {
+        document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+    } else if (document.attachEvent) {
+        document.attachEvent('WeixinJSBridgeReady', onBridgeReady);
+        document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+    }
+} else {
+    onBridgeReady();
+}
+		</script>
+		<script type="text/javascript">
+			var intDiff = parseInt('{$data.endtime}'); //倒计时总秒数量
+function timer(intDiff) {
+    times = window.setInterval(function() {
+        var day = 0,
+            hour = 0,
+            minute = 0,
+            second = 0; //时间默认值       
+        if (intDiff > 0) {
+            day = Math.floor(intDiff / (60 * 60 * 24));
+            hour = Math.floor(intDiff / (60 * 60)) - (day * 24);
+            minute = Math.floor(intDiff / 60) - (day * 24 * 60) - (hour * 60);
+            second = Math.floor(intDiff) - (day * 24 * 60 * 60) - (hour * 60 * 60) - (minute * 60);
+        }
+        if (minute <= 9) minute = '0' + minute;
+        if (second <= 9) second = '0' + second;
+        if (hour <= 0 && minute <= 0 && second <= 0) {
+            $("#divTime").html("<small style='color:red; font-size:26px'>订单二维码已过期</small>");
+            $("#qrcode").html('<img id="qrcode_load" src="/static/index/image/qrcode_timeout.png">'); //输出过期二维码提示图片
+        } else {
+            $("#divTime").html("二维码有效时间:<small style='color:red; font-size:26px'>" + minute + "</small>分<small style='color:red; font-size:26px'>" + second + "</small>秒,失效勿付");
+        }
+        intDiff--
+    }, 1000);
+}
+
+$(function() {
+    timer(intDiff);
+});
+$('#price').html('¥{$data.real_money|raw}<font color=red style="font-size:8px"></font>'); //输出真实付款金额
+$('#qrcode_load').remove(); //隐藏等待图片
+var qrcode = new QRCode('qrcode', {
+    text: "{$data.payurl|raw}",
+    width: 256,
+    height: 256,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+});
+if ('{$data.type}' == "alipay") {
+    if (window.navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)) {
+        //H5按钮1
+        location.href = "{$data.payurl|raw}";
+        $("#alipayh5url_1").html('<small> <font color=red style="font-size:16px">如果无法跳转请扫码</font></div></small> <a type="button" href="{$data.payurl}" class="btn btn-lg btn-block btn-default" style="font-size:13px;background-color:#019be3;color:#ffffff;margin:20px 0" target="_blank">点击唤醒支付宝APP支付</a>'); //H5按钮1
+
+    }
+}else if('{$data.type}' == "wxpay"){
+    if (window.navigator.userAgent.match(/(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i)) {
+        //H5按钮1
+        
+        $("#alipayh5url_1").html('<small> <font color=red style="font-size:16px">请先保存二维码图片，再下方打开微信</font></div></small> <a type="button" href="weixin://scanqrcode" class="btn btn-lg btn-block btn-default" style="font-size:13px;background-color:#019be3;color:#ffffff;margin:20px 0" target="_blank">点击打开微信扫一扫</a>'); //H5按钮1
+
+    }
+}
+order();
+updateQrOk = 0;
+updateQrImg = 0;
+updateQrNo = 0;
+//订单监控  {订单监控}
+function order() {
+        $.get("/api/get/{$data.trade_no}", {}, function(result) {
+            console.log(result);
+            //成功
+            if (result.code == '200' && updateQrOk == 0) {
+                updateQrOk == 1;
+                $("#divTime").html("<small style='color:red; font-size:22px'>" + result.msg + "</small>");
+                $("#qrcode").html('<img id="qrcode_load" src="/static/index/image/pay_ok.png">'); //输出过期二维码提示图片
+                //回调页面
+                window.clearInterval(orderlst);
+                window.clearInterval(times);
+                layer.msg('支付成功，正在跳转中...');
+                window.location.href = result.data;
+            }
+
+            //订单已经超时
+            if (result.code == '202' && updateQrNo == 0) {
+                updateQrNo == 1;
+                $("#divTime").html("<small style='color:red; font-size:22px'>" + result.msg + "</small>");
+                $("#qrcode").html('<img id="qrcode_load" src="/static/index/image/qrcode_timeout.png">'); //输出过期二维码提示图片
+                window.clearInterval(orderlst);
+                window.clearInterval(times);
+                layer.confirm(result.msg, {
+                    icon: 2,
+                    title: '支付失败',
+                    btn: ['确认'] //按钮
+                }, function() {
+                    location.href = result.data
+                });
+            }
+
+        }, "JSON");
+    }
+    //周期监听 
+orderlst = window.setInterval(function() {
+    order();
+}, 3000);
+
+function Report_prompt() {
+    //prompt层
+    layer.prompt({
+        title: '请输入违规内容',
+        formType: 2,
+        btn: ['提交', '取消']
+    }, function(text, index) {
+        layer.close(index);
+        $.ajax({
+            type: "POST",
+            dataType: "json",
+            url: "/api.php?act=order_report",
+            timeout: 10000, //ajax请求超时时间10s
+            data: {
+                pid: "1000",
+                text: text,
+                out_trade_no: "20210508135729623",
+                product_name: "测试商品"
+            }, //post数据
+            success: function(data, textStatus) {
+                //从服务器得到数据，显示数据并继续查询
+                layer.msg(data.msg);
+            },
+        });
+    });
+};
+		</script>
+	</body>
+
+</html>

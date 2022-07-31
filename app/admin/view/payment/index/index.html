@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>用户管理 - 派后台管理系统</title>
+    {include file="public/header" /}
+<style>
+    .qrcode{width:108px}
+    .blue{transform:scale(2,2);margin-bottom:54px;}
+</style>
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="name">通道名称</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="name" value="" name="name" placeholder="请输入通道名称">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">类型</label>
+                            <select name="type" id="type" class="form-control">
+                                <option value="">所有</option>
+                                <option value="alipay">支付宝</option>
+                                <option value="wxpay">微信</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select name="status" id="status" class="form-control">
+                                <option value="">所有</option>
+                                <option value="1">启用</option>
+                                <option value="2">禁用</option>
+                                <option value="3">限额</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>通道管理</h4></div>
+                <div class="card-body">
+                    <div id="toolbar" class="toolbar-btn-action">
+                        <button id="btn_add" type="button" class="btn btn-primary m-r-5" onclick="iframe.createIframe('添加通道','/admin/payment.index/add')">
+                            <span class="mdi mdi-plus" aria-hidden="true"></span>新增
+                        </button>
+                        <button id="btn_edit" type="button" class="btn btn-success m-r-5" onclick="isEnable('enable')">
+                            <span class="mdi mdi-check" aria-hidden="true"></span>启用
+                        </button>
+                        <button id="btn_disable" type="button" class="btn btn-warning m-r-5" onclick="isEnable('disable')">
+                            <span class="mdi mdi-block-helper" aria-hidden="true"></span>禁用
+                        </button>
+                        <button id="btn_delete" type="button" class="btn btn-danger" onclick="del()">
+                            <span class="mdi mdi-window-close" aria-hidden="true"></span>删除
+                        </button>
+                    </div>
+                    <table id="tb_departments"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer"/}
+ <script type="text/javascript" src="__ADMIN_PATH__js/qrcode.min.js"></script>
+ <script type="text/javascript">
+  $('.row').on('click','.qrcode',function(){
+      $('.qrcode').removeClass("blue");
+      $(this).addClass("blue");
+  })
+  $('.row').on('click','.blue',function(){
+      $('.qrcode').removeClass("blue");
+     
+  })
+ </script>
+<script type="text/javascript">
+    $('#tb_departments').bootstrapTable({
+        classes: 'table table-bordered table-hover table-striped',
+        url: '/admin/payment.index/lst',
+        method: 'post',
+        dataType : 'json',        // 因为本示例中是跨域的调用,所以涉及到ajax都采用jsonp,
+        uniqueId: 'id',
+        idField: 'id',             // 每行的唯一标识字段
+        toolbar: '#toolbar',       // 工具按钮容器
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        responseHandler: function (res) {
+            return {
+                "total": res.count,
+                "rows": res.data,
+            };
+        },
+        pagination: true,
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            temp['limit'] = params.limit;
+            temp['page'] = (params.offset / params.limit) + 1;
+            return temp;
+        },
+        sidePagination: "server",
+        pageNumber: 1,
+        pageSize: 20,
+        pageList: [20, 50, 100],
+        columns: [{
+            checkbox: true    // 是否显示复选框
+        }, {
+            field: 'id',
+            title: '通道编号',
+            sortable: true    // 是否排序
+        }, {
+            field: 'name',
+            title: '通道名称'
+        }, {
+            field: 'image',
+            title: '收款码',
+            formatter:function (value,row,index) {
+                
+                 if(row.type ==='alipay'){
+                     value = 'alipays://platformapi/startapp?appId=09999988&actionType=toAccount&goBack=NO&amount=&userId='+value+'&memo=INTL'
+                 }
+                return '<div class="qrcode" data-url="'+value+'" style="width: 108px;"></div>' 
+                 
+                
+            },
+        }, {
+            field: 'type',
+            title: '通道类型',
+            formatter:function (value,row,index) {
+                return value === 'alipay' ? '支付宝' : '微信';
+            },
+        }, {
+            field: 'float_type',
+            title: '浮动类型',
+            formatter:function (value,row,index) {
+                if(value ===1){
+                    return '上下浮动';
+                }else if(value ===2){
+                    return '向上浮动';
+                }else{
+                    return '向下浮动';
+                }
+            },
+        }, {
+            field: 'float_quantity',
+            title: '浮动范围(数量 * 单位)',
+            formatter:function (value,row,index) {
+                return value + ' * '+row.float_unit;
+            },
+        },{
+            field: 'today',
+            title: '今日收款/每日限额',
+            formatter:function (value,row,index) {
+                return value + ' / '+row.limit;
+            },
+        }, {
+            field: 'create_time',
+            title: '创建时间'
+        }
+        , {
+            field: 'status',
+            title: '通道状态',
+            formatter:function (value,row,index) {
+                if(value ===1){
+                    return '<a style="color:green">正常</a>';
+                }else if(value ===2){
+                    return '<a style="color:red">禁用</a>';
+                }else{
+                    return '<a style="color:#ff8300; ">限额</a>';
+                }
+                
+            },
+        },{
+            field: 'listen_status',
+            title: '挂机状态',
+            formatter:function (value,row,index) {
+                if(value){
+                    return '<a style="color:green">在线</a>';
+                }else{
+                    return '<a style="color:red">离线</a>';
+                }
+                
+            },
+        }, {
+            field: 'operate',
+            title: '操作',
+            formatter: btnGroup,  // 自定义方法
+            events: {
+                'click .edit-btn': function (event, value, row, index) {
+                    iframe.createIframe('修改通道','/admin/payment.index/edit?id='+row.id)
+                },
+                'click .test-btn': function (event, value, row, index) {
+                    $.post(url="/admin/payment.index/test",data={"id":row.id,"money":'1'},function (res) {
+                            if (res.code == 200) {
+                                parent.lightyear.notify('获取成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                               
+                                window.open(res.url)
+                            }else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                   });
+                   
+                },
+                'click .del-btn': function (event, value, row, index) {
+                    $.alert({
+                        title: '系统提示',
+                        content: '删除提醒',
+                        buttons: {
+                            confirm: {
+                                text: '确认',
+                                btnClass: 'btn-primary',
+                                action: function(){
+                                    $.post(url="/admin/payment.index/del",data={"id":row.id},function (res) {
+                                        if (res.status == 200) {parent.lightyear.notify('删除成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$("#tb_departments").bootstrapTable('refresh');}
+                                        else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: '取消'
+                            }
+                        }
+                    });
+                }
+            }
+        }],
+
+        onEditableSave: function (field, row, oldValue, $el) {
+            $.ajax({
+                type: "get",
+                url: "/admin/payment.index/lst",
+                data: row,
+                dataType: 'jsonp',
+                success: function (data, status) {
+                    if (data.code == '200') {
+                        // 这里的状态显示有自定义样式区分，做单行的更新
+                        $('.example-table').bootstrapTable('updateRow', {index: row.id, row: row});
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function () {
+                    alert('修改失败，请稍后再试');
+                }
+            });
+        },
+
+        onLoadSuccess: function(data){
+            $("[data-toggle='tooltip']").tooltip();
+        }
+    });
+     $('#tb_departments').on('load-success.bs.table',function(e,data){
+         let doms = $('.qrcode')
+         for(var i=0;i<doms.length;i++){
+            let dom =doms[i]
+            let qrcode = new QRCode(dom, {
+                    text: dom.getAttribute("data-url"),
+                    width: 128,
+                    height: 128,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.L
+                  });
+         }
+         return;
+         
+                  console.log(qrcode._el);
+     })
+    $("#search").click(function () {
+        $('#tb_departments').bootstrapTable('refresh', {});
+    });
+
+    // 操作按钮
+    function btnGroup ()
+    {
+        let html =
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 edit-btn" title="编辑" data-toggle="tooltip"><i class="mdi mdi-pencil"></i></a>' +
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 test-btn" title="测试" data-toggle="tooltip"><i class="mdi mdi-monitor"></i></a>' +
+            '<a href="#!" class="btn btn-xs btn-default del-btn" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i></a>';
+        return html;
+    }
+
+    // 删除
+    function del() {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '选中项将全部被删除，请谨慎操作!' ,
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/payment.index/del",data={id:checkID},function (res) {
+                            if (res.status == 200){ lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    // 批量启用或者禁用
+    function isEnable(type) {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: type == 'enable' ? '选中项将全部启用，请谨慎操作!' : '选中项将全部禁用，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        if (type == 'enable')
+                        {
+                            $.post("/admin/payment.index/enabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                            })
+                        }else
+                        {
+                            $.post("/admin/payment.index/disabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            })
+                        }
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

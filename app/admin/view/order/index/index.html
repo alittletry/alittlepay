@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <title>订单管理 - 派后台管理系统</title>
+    {include file="public/header" /}
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="trade_no">系统订单号</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="trade_no" value="" name="trade_no" placeholder="请输入系统订单号搜索">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="out_trade_no">商户订单号</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="out_trade_no" value="" name="out_trade_no" placeholder="请输入商户订单号搜索">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="create_time">创建时间</label>
+                            <div class="input-group">
+                                <input class="form-control js-datetimepicker" type="text" id="start_time" name="start_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="开始时间">
+                                <span class="input-group-addon">~</span>
+                                <input class="form-control js-datetimepicker" type="text" name="end_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment_id">通道名称</label>
+                            <select name="payment_id" id="payment_id" class="form-control">
+                                <option value="">所有</option>
+                                {volist name="payments" id="vo"}
+                                <option value="{$vo.id}">{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="type">订单类型</label>
+                            <select name="type" id="type" class="form-control">
+                                <option value="">所有</option>
+                                <option value="alipay">支付宝</option>
+                                <option value="wxpay">微信</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="trade_status">订单状态</label>
+                            <select name="trade_status" id="trade_status" class="form-control">
+                                <option value="">所有</option>
+                                <option value="TRADE_SUCCESS">已支付</option>
+                                <option value="TRADE_FAIL">未支付</option>
+                                <option value="TRADE_OVERTIME">已超时</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>订单管理</h4></div>
+                <div class="card-body">
+                    <div id="toolbar" class="toolbar-btn-action">
+                        <button id="btn_delete" type="button" class="btn btn-danger" onclick="del()">
+                            <span class="mdi mdi-window-close" aria-hidden="true"></span>批量删除订单
+                        </button>
+                    </div>
+                    <table id="tb_departments"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer"/}
+<script type="text/javascript">
+    $('#tb_departments').bootstrapTable({
+        classes: 'table table-bordered table-hover table-striped',
+        url: '/admin/order.index/lst',
+        method: 'post',
+        dataType : 'json',        // 因为本示例中是跨域的调用,所以涉及到ajax都采用jsonp,
+        uniqueId: 'id',
+        idField: 'id',             // 每行的唯一标识字段
+        toolbar: '#toolbar',       // 工具按钮容器
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        responseHandler: function (res) {
+            return {
+                "total": res.count,
+                "rows": res.data,
+            };
+        },
+        pagination: true,
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            temp['limit'] = params.limit;
+            temp['page'] = (params.offset / params.limit) + 1;
+            return temp;
+        },
+        sidePagination: "server",
+        pageNumber: 1,
+        pageSize: 20,
+        pageList: [20, 50, 100],
+        columns: [{
+            checkbox: true    // 是否显示复选框
+        }, {
+            field: 'id',
+            title: 'ID',
+            sortable: true    // 是否排序
+        }, {
+            field: 'payment_name',
+            title: '通道名'
+        }, {
+            field: 'out_trade_no',
+            title: '商家订单号',
+        }, {
+            field: 'trade_no',
+            title: '系统订单号',
+        }, {
+            field: 'type',
+            title: '支付方式',
+            formatter:function (value,row,index) {
+                return value === 'alipay' ? '支付宝' : '微信';
+            },
+        }, {
+            field: 'name',
+            title: '商品名称'
+        }, {
+            field: 'money',
+            title: '商品金额'
+        }, {
+            field: 'real_money',
+            title: '订单金额'
+        }, {
+            field: 'create_time',
+            title: '创建时间'
+        }, {
+            field: 'notify_url',
+            title: '异步通知地址'
+        }, {
+            field: 'return_url',
+            title: '同步跳转地址'
+        }
+        ,{
+            field: 'trade_status',
+            title: '支付状态',
+            formatter:function (value,row,index) {
+               
+                if(value ==='TRADE_SUCCESS'){
+                    return '<a style="color:green">已支付</a>';
+                }else if(value ==='TRADE_OVERTIME'){
+                    return '<a style="color:red; ">已超时</a>';
+                }else{
+                    return '<a style="color:#ff8300; ">未支付</a>';
+                }
+            },
+        },{
+            field: 'notify_status',
+            title: '通知状态',
+            formatter:function (value,row,index) {
+                if(value ===0){
+                    return '<a style="color:#8b95a5">未通知</a>';
+                }else if(value ===1){
+                    return '<a style="color:green; ">正常已通知</a>';
+                }else{
+                    return '<a style="color:red; ">异常已通知</a>';
+                }
+            },
+        }, {
+            field: 'pay_time',
+            title: '支付时间'
+        }, {
+            field: 'operate',
+            title: '操作',
+            formatter: btnGroup,  // 自定义方法
+            events: {
+                'click .notify-btn': function (event, value, row, index) {
+        
+                    $.post("/admin/order.index/notify",data={id:row.id},function (res) {
+                        if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');}
+                        else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                    })
+                },
+                'click .supplement-btn': function (event, value, row, index) {
+                    $.alert({
+                        title: '系统提示',
+                        content: '本次通知将修改订单为已支付并进行通知',
+                        buttons: {
+                            confirm: {
+                                text: '确认',
+                                btnClass: 'btn-primary',
+                                action: function(){
+                                   $.post("/admin/order.index/notify_done",data={id:row.id},function (res) {
+                                        if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');}
+                                        else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                
+                                    })
+                                }
+                            },
+                            cancel: {
+                                text: '取消'
+                            }
+                        }
+                    });
+                    
+                },
+                 'click .callback-btn': function (event, value, row, index) {
+                    iframe.createIframe('通知记录','/admin/order.index/callback?order_id='+row.id)
+                    
+                },
+                'click .del-btn': function (event, value, row, index) {
+                    $.alert({
+                        title: '系统提示',
+                        content: '删除提醒',
+                        buttons: {
+                            confirm: {
+                                text: '确认',
+                                btnClass: 'btn-primary',
+                                action: function(){
+                                    $.post(url="/admin/order.index/del",data={"id":row.id},function (res) {
+                                        if (res.status == 200) {parent.lightyear.notify('删除成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');$("#tb_departments").bootstrapTable('refresh');}
+                                        else parent.lightyear.notify('删除失败', 'danger', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
+                                    });
+                                }
+                            },
+                            cancel: {
+                                text: '取消'
+                            }
+                        }
+                    });
+                }
+            }
+        }],
+
+        onEditableSave: function (field, row, oldValue, $el) {
+            $.ajax({
+                type: "get",
+                url: "/admin/order.index/lst",
+                data: row,
+                dataType: 'jsonp',
+                success: function (data, status) {
+                    if (data.code == '200') {
+                        // 这里的状态显示有自定义样式区分，做单行的更新
+                        $('.example-table').bootstrapTable('updateRow', {index: row.id, row: row});
+                    } else {
+                        alert(data.msg);
+                    }
+                },
+                error: function () {
+                    alert('修改失败，请稍后再试');
+                }
+            });
+        },
+
+        onLoadSuccess: function(data){
+            $("[data-toggle='tooltip']").tooltip();
+        }
+    });
+
+    $("#search").click(function () {
+        $('#tb_departments').bootstrapTable('refresh', {});
+    });
+
+    // 操作按钮
+    function btnGroup ()
+    {
+        let html =
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 notify-btn" title="通知一次" data-toggle="tooltip"><i class="mdi mdi-mixcloud"></i>通知</a>' +
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 supplement-btn" title="补单" data-toggle="tooltip"><i class="mdi mdi-ambulance"></i>补单</a>' +
+            '<a href="#!" class="btn btn-xs btn-default m-r-5 callback-btn" title="通知日志" data-toggle="tooltip"><i class="mdi mdi-ambulance"></i>通知记录</a>' +
+            '<a href="#!" class="btn btn-xs btn-default del-btn" title="删除" data-toggle="tooltip"><i class="mdi mdi-window-close"></i>删除</a>';
+        return html;
+    }
+
+    // 删除
+    function del() {
+         var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: '删除提醒' ,
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        $.post("/admin/order.index/del",data={id:checkID},function (res) {
+                            if (res.status == 200){ lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                            else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                        })
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+
+    // 批量启用或者禁用
+    function isEnable(type) {
+        var checkID = "";
+        var selectedItem = $('#tb_departments').bootstrapTable('getAllSelections');
+        if (selectedItem=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        for (var i = 0 ; i<  selectedItem.length; i++)
+        {
+            checkID += selectedItem[i]['id']+",";
+        }
+        if (checkID=="") return lightyear.notify("没有选中项", 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+        $.confirm({
+            title: '重要提醒!',
+            content: type == 'enable' ? '选中项将全部启用，请谨慎操作!' : '选中项将全部禁用，请谨慎操作!',
+            backgroundDismiss: true,
+            buttons: {
+                ok: {
+                    text: '确认',
+                    btnClass: 'btn-danger',
+                    action: function () {
+                        if (type == 'enable')
+                        {
+                            $.post("/admin/admin.admin/enabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+
+                            })
+                        }else
+                        {
+                            $.post("/admin/admin.admin/disabled",data={id:checkID},function (res) {
+                                if (res.status == 200) {lightyear.notify(res.msg, 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');location.reload();}
+                                else lightyear.notify(res.msg, 'danger', 3000, 'mdi mdi-emoticon-neutral', 'top', 'center');
+                            })
+                        }
+                    }
+                },
+                cancel: {
+                    text: '取消',
+                    btnClass: 'btn-primary'
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

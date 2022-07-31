@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+   
+    {include file="public/header" /}
+</head>
+<body>
+<div class="container-fluid p-t-15">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>搜索</h4></div>
+                <div class="card-body">
+                    <form class="form-inline searchForm" onsubmit="return false;">
+                        <div class="form-group">
+                            <label for="title">通知标题</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="title" value="" name="title" placeholder="请输入标题模糊关键字">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="device">挂机设备号</label>
+                            <div class="input-group">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="device" value="" name="device" placeholder="请输入挂机设备号搜索">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="create_time">创建时间</label>
+                            <div class="input-group">
+                                <input class="form-control js-datetimepicker" type="text" id="start_time" name="start_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="开始时间">
+                                <span class="input-group-addon">~</span>
+                                <input class="form-control js-datetimepicker" type="text" name="end_time" value="" data-side-by-side="true" data-locale="zh-cn" data-format="YYYY-MM-DD" placeholder="结束时间">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment_id">通道名称</label>
+                            <select name="payment_id" id="payment_id" class="form-control">
+                                <option value="">所有</option>
+                                {volist name="payments" id="vo"}
+                                <option value="{$vo.id}">{$vo.name}</option>
+                                {/volist}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pkg">通知类型</label>
+                            <select name="pkg" id="pkg" class="form-control">
+                                <option value="">所有</option>
+                                <option value="com.eg.android.AlipayGphone">支付宝</option>
+                                <option value="com.tencent.mm">微信</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success" style="margin: -10px 0 0 10px;" id="search">搜索</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header"><h4>监听记录</h4></div>
+                <div class="card-body">
+                    <table id="tb_departments"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{include file="public/footer"/}
+<script type="text/javascript">
+    $('#tb_departments').bootstrapTable({
+        classes: 'table table-bordered table-hover table-striped',
+        url: '/admin/listen.index/lst',
+        method: 'post',
+        dataType : 'json',        // 因为本示例中是跨域的调用,所以涉及到ajax都采用jsonp,
+        uniqueId: 'id',
+        idField: 'id',             // 每行的唯一标识字段
+        toolbar: '#toolbar',       // 工具按钮容器
+        showColumns: true,         // 是否显示所有的列
+        showRefresh: true,         // 是否显示刷新按钮
+        responseHandler: function (res) {
+            return {
+                "total": res.count,
+                "rows": res.data,
+            };
+        },
+        pagination: true,
+        queryParams: function(params) {
+            var temp = toArrayList($(".searchForm").serializeArray());
+            temp['limit'] = params.limit;
+            temp['page'] = (params.offset / params.limit) + 1;
+            return temp;
+        },
+        sidePagination: "server",
+        pageNumber: 1,
+        pageSize: 20,
+        pageList: [20, 50, 100],
+        columns: [{
+            field: 'id',
+            title: 'ID',
+            sortable: true    // 是否排序
+        }, {
+            field: 'payment_id',
+            title: '通道ID'
+        }, {
+            field: 'device',
+            title: '挂机设备',
+        }, {
+            field: 'title',
+            title: '通知标题'
+        }, {
+            field: 'content',
+            title: '通知内容'
+        }, {
+            field: 'pkg',
+            title: '通知程序'
+        }, {
+            field: 'remarks',
+            title: '通知关联'
+        }, {
+            field: 'create_time',
+            title: '通知时间'
+        }],
+
+
+        onLoadSuccess: function(data){
+            $("[data-toggle='tooltip']").tooltip();
+        }
+    });
+ $("#search").click(function () {
+        $('#tb_departments').bootstrapTable('refresh', {});
+    });
+
+</script>
+</body>
+</html>

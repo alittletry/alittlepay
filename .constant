@@ -1,0 +1,3 @@
+<?php
+define('INSTALL_DATE',1658965197);
+define('SERIALNUMBER','539mar');
