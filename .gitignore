@@ -4,7 +4,6 @@
 /public/upload
 *.log
 /.env
-/runtime
 composer.lock
 /public/nginx.htaccess
 /public/robots.txt
