@@ -47,6 +47,7 @@ class Index
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
                            (new Email())->send($data['type'].'暂无可用通道','暂无可用通道通知');
                      }
+                     $model->commit();
                     return '暂无可用通道,请稍后再试'; 
                     
                 }
@@ -55,6 +56,7 @@ class Index
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
                            (new Email())->send($data['type'].'暂无可用通道','暂无可用通道通知');
                      }
+                     $model->commit();
                    return '暂无可用通道,请稍后再试'; 
                 }
                 $order= new Order;
@@ -64,7 +66,7 @@ class Index
                 $order->return_url = $data['return_url'];
                 $order->name = $data['name'];
                 $order->money = $data['money'];
-                $order->param = $data['param'];
+                $order->param = $data['param']?:'';
                 $order->sign = $data['sign'];
                 $order->sign_type = $data['sign_type'];
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
@@ -147,6 +149,7 @@ class Index
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
                            (new Email())->send($data['type'].'暂无可用通道','暂无可用通道通知');
                      }
+                     $model->commit();
                     return json(['code'=>201,'msg'=>'暂无可用通道']);
                 }
                 $paytools = $this->create_payment($data['money'],$list);
@@ -154,6 +157,7 @@ class Index
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
                            (new Email())->send($data['type'].'暂无可用通道','暂无可用通道通知');
                      }
+                     $model->commit();
                     return json(['code'=>201,'msg'=>'暂无可用通道']);
                 }
                 $order= new Order;
@@ -163,7 +167,7 @@ class Index
                 $order->return_url = $data['return_url'];
                 $order->name = $data['name'];
                 $order->money = $data['money'];
-                $order->param = $data['param'];
+                $order->param = $data['param']?:'';
                 $order->sign = $data['sign'];
                 $order->sign_type = $data['sign_type'];
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
@@ -172,8 +176,7 @@ class Index
                 $order->real_money = number_format($paytools['money'], 2, '.', ' ');;
                 $order->payment_id = $paytools['payment']['id'];
                 $order->save();
-                //$model->where(['id'=>1])->data(['num'=>900])->update();//id为1的更新
-                //sleep(10);//等待10秒
+                
                 $model->commit();
                 
                 return json(['code'=>200,'msg'=>'获取支付链接成功','url'=>Request::domain().'/api/pay/'.$order['trade_no']]);

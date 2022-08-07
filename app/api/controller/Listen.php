@@ -45,7 +45,9 @@ class Listen
                 
                 $list=$model->where(['device'=>$device,'title'=>$data['title'],'content'=>$data['content'],'pkg'=>$data['pkg'],'create_time'=>strtotime($data['notify_time'])])->lock(true)->select();
                 if(count($list) > 0){
-                   // return json(['code'=>200,'msg'=>'重复监听内容']);
+                    //同设备同时间同金额 100%是重复监听，不做处理
+                    $model->commit();
+                    return json(['code'=>200,'msg'=>'重复监听内容']);
                 }
                 if($data['pkg']=="com.eg.android.AlipayGphone"){
                     $payment_id=$alipay_id;
@@ -54,6 +56,7 @@ class Listen
                     $payment_id=$wxpay_id;
                     $listen=true;
                 }else{
+                    //其他应用不做监听处理，仅记录
                     $payment_id=null;
                     $listen=false;
                 }

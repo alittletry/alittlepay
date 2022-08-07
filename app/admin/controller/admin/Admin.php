@@ -180,7 +180,7 @@ class Admin extends AuthController
             ['newpwd','']
         ]);
         if ($data['oldpwd'] == '' || $data['newpwd'] == '') return app("json")->fail("参数有误，新旧密码为空！");
-        if ($this->adminInfo['pwd'] == md5(md5($data['oldpwd']))) return aModel::update(['pwd'=>md5(md5($data['newpwd']))],['id'=>$this->adminId]) ? app("json")->success("操作成功") : app("json")->fail("操作失败");
+        if ($this->adminInfo['pwd'] == md5($data['oldpwd'])) return aModel::update(['pwd'=>md5($data['newpwd'])],['id'=>$this->adminId]) ? app("json")->success("操作成功") : app("json")->fail("操作失败");
         return app("json")->fail("密码不正确！");
     }
 
