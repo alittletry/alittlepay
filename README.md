@@ -29,9 +29,9 @@ ALittlePay是一个基于Thinkphp后端框架和Bootstrap前端框架开发的�
 
 ```
 Nignx/Apache/IIS
-PHP 7.3 ~ 8.0
+PHP 7.1 ~ 7.4
 MySQL 5.7
-Redis
+Redis 且php安装redis拓展
 ```
 ## 安装教程
 

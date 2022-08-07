@@ -25,15 +25,15 @@ class Index
      */
     public function submit()
     {
-        if(!Request::has('pid'))return '请检查参数【pid】';  
+        if(!Request::has('pid'))return '请检查参数【pid】';
         if(!Request::has('type') || (Request::param('type') !=='alipay' && Request::param('type') !=='wxpay' ))return '请检查参数【type】';  
         if(!Request::has('out_trade_no'))return '请检查参数【out_trade_no】';  
         if(!Request::has('notify_url'))return '请检查参数【notify_url】';  
         if(!Request::has('return_url'))return '请检查参数【return_url】';  
         if(!Request::has('name'))return '请检查参数【name】';  
-        if(!Request::has('money'))return '请检查参数【money】';  
-        if(!Request::has('sign'))return '请检查参数【sign】';  
-        if(!Request::has('sign_type'))return '请检查参数【sign_type】';  
+        if(!Request::has('money'))return '请检查参数【money】';
+        if(!Request::has('sign'))return '请检查参数【sign】';
+        if(!Request::has('sign_type') && Request::param('sign_type') !== 'MD5')return '请检查参数【sign_type】';  
         $data=Request::param();
        
         if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
@@ -66,7 +66,7 @@ class Index
                 $order->return_url = $data['return_url'];
                 $order->name = $data['name'];
                 $order->money = $data['money'];
-                $order->param = $data['param']?:'';
+                $order->param = isset($data['param'])?$data['param']:'';
                 $order->sign = $data['sign'];
                 $order->sign_type = $data['sign_type'];
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
@@ -137,7 +137,7 @@ class Index
         if(!Request::has('name'))return json(['code'=>201,'msg'=>'请检查参数【name】']);
         if(!Request::has('money'))return json(['code'=>201,'msg'=>'请检查参数【money】']);
         if(!Request::has('sign'))return json(['code'=>201,'msg'=>'请检查参数【sign】']);
-        if(!Request::has('sign_type'))return json(['code'=>201,'msg'=>'请检查参数【sign_type】']);
+        if(!Request::has('sign_type') && Request::param('sign_type') !== 'MD5')return '请检查参数【sign_type】';  
         $data=Request::param();
         if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
             $model=Db::name('payment');
@@ -167,7 +167,7 @@ class Index
                 $order->return_url = $data['return_url'];
                 $order->name = $data['name'];
                 $order->money = $data['money'];
-                $order->param = $data['param']?:'';
+                $order->param = isset($data['param'])?$data['param']:'';
                 $order->sign = $data['sign'];
                 $order->sign_type = $data['sign_type'];
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
