@@ -92,7 +92,7 @@ class Listen
                     }
                     $payment = Payment::find($payment_id);
                     $paymoney = Order::where(['payment_id'=>$payment_id,'trade_status'=>'TRADE_SUCCESS'])->whereDay('create_time')->sum('real_money');
-                    if($payment['status']!==3 && (int)$paymoney >= (int)$payment['limit']){
+                    if($payment['status']!==3 && (int)$paymoney >= (int)$payment['limit'] && (int)$payment['limit'] !==0){
                        Payment::where('id',$payment_id)->update(['status'=>3]);
                        if(systemConfig("mail_type") &&systemConfig("limit_notify")){
                            (new Email())->send('通道【'.$payment_id.$payment['name'].'】限额,账号限额'.$payment['limit'].'元,今日已收款'.(int)$paymoney.'元','通道【'.$payment_id.$payment['name'].'】限额通知');
