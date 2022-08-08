@@ -19,16 +19,16 @@ class Listen
             return json(['code'=>201,'msg'=>'key错误']);
         }
         if(Request::has('alipay_id') && Request::post('alipay_id') && Payment::find(Request::post('alipay_id'))){
-            Cache::set('listen_'.Request::post('alipay_id'), 1, 30);
+            Cache::set('listen_'.Request::post('alipay_id'),1, 7);
         }
         if(Request::has('wxpay_id') && Request::post('wxpay_id') && Payment::find(Request::post('wxpay_id'))){
-            Cache::set('listen_'.Request::post('wxpay_id'), 1, 30);
+            Cache::set('listen_'.Request::post('wxpay_id'),1, 7);
         }
         return json(['code'=>200,'msg'=>'通信正常']);
     }
     public function test()
     {
-       throw new \think\exception\HttpException(401, '异常消息');
+       //备用调试
     }
     public function notify()
     {

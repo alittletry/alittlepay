@@ -33,7 +33,7 @@ class Payment extends BaseModel
         if ($where['type'] != '') $model = $model->where("type",$where['type']);
         if ($where['status'] != '') $model = $model->where("status",$where['status']);
         $count = $model->count();
-        if ($where['page'] && $where['limit']) $model = $model->page((int)$where['page'],(int)$where['limit']);
+        if ($where['page'] && $where['limit']) $model = $model->page((int)$where['page'],(int)$where['limit'])->order('create_time desc');
       //  $count =  self::count();
         $data = $model->select()->each(function ($item){
             // 用户信息
