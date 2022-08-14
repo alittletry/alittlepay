@@ -4,8 +4,6 @@ use think\facade\Route;
 
 
 Route::group(function () {
-
-
     //下单接口
     Route::get('submit', 'index/submit');
     Route::post('submit_api', 'index/submit_api');

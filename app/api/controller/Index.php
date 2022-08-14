@@ -139,8 +139,7 @@ class Index
         if(!Request::has('sign'))return json(['code'=>201,'msg'=>'请检查参数【sign】']);
         if(!Request::has('sign_type') && Request::param('sign_type') !== 'MD5')return '请检查参数【sign_type】';  
         $data=Request::param();
-       // if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
-         if(1==1){    
+        if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
             $model=Db::name('payment');
             $model->startTrans();
             try{
