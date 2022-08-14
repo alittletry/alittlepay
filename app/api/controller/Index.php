@@ -97,7 +97,7 @@ class Index
         $orderInfo['endtime']=strtotime($orderInfo['create_time'])+300 -time();
         $payment = Payment::find($orderInfo['payment_id']);
         if($payment['type']=='alipay'){
-           $orderInfo['payurl']= 'alipays://platformapi/startapp?appId=09999988&actionType=toAccount&goBack=NO&amount='.$orderInfo['real_money'].'&userId='.$payment['image'].'&memo=INTL';
+           $orderInfo['payurl']= 'alipays://platformapi/startapp?appId=09999988&actionType=toAccount&goBack=NO&amount='.$orderInfo['real_money'].'&userId='.$payment['image'].'&memo=';
         }else{
            $orderInfo['payurl']= $payment['image'];
         }

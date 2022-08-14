@@ -125,7 +125,7 @@
             formatter:function (value,row,index) {
                 
                  if(row.type ==='alipay'){
-                     value = 'alipays://platformapi/startapp?appId=09999988&actionType=toAccount&goBack=NO&amount=&userId='+value+'&memo=INTL'
+                     value = 'alipays://platformapi/startapp?appId=09999988&actionType=toAccount&goBack=NO&amount=&userId='+value+'&memo='
                  }
                 return '<div class="qrcode" data-url="'+value+'" style="width: 108px;"></div>' 
                  
