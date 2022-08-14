@@ -179,7 +179,7 @@ class Index
                 
                 $model->commit();
                 
-                return json(['code'=>200,'msg'=>'获取支付链接成功','url'=>Request::domain().'/api/pay/'.$order['trade_no'],'test'=>$paytools]);
+                return json(['code'=>200,'msg'=>'获取支付链接成功','url'=>Request::domain().'/api/pay/'.$order['trade_no']]);
 
                 
             }catch (\Exception $exception){

@@ -5,7 +5,7 @@ use think\facade\Route;
 
 Route::group(function () {
     //下单接口
-    Route::get('submit', 'index/submit');
+    Route::rule('submit', 'index/submit');
     Route::post('submit_api', 'index/submit_api');
     
     Route::get('pay/:order', 'index/pay');
