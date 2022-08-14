@@ -141,7 +141,7 @@ class Admin extends AuthController
         if (is_array($data['avatar'])) $data['avatar'] = $data['avatar'][0];
         if ($id=="")
         {
-            $data['pwd'] = md5(md5($data['pwd']));
+            $data['pwd'] = md5($data['pwd']);
             $data['ip'] = $this->request->ip();
             $data['create_user'] = $this->adminId;
             $data['create_time'] = time();
@@ -149,7 +149,7 @@ class Admin extends AuthController
         }else
         {
             $ainfo = aModel::get($id);
-            if ($ainfo['pwd'] != $data['pwd']) $data['pwd'] = md5(md5($data['pwd']));
+            if ($ainfo['pwd'] != $data['pwd']) $data['pwd'] = md5($data['pwd']);
             $data['update_user'] = $this->adminId;
             $data['update_time'] = time();
             $res = aModel::update($data,['id'=>$id]);

@@ -41,7 +41,7 @@ class Index
             $model=Db::name('payment');
             $model->startTrans();
             try{
-                $data['money'] = number_format($data['money'], 2, '.', ' ');
+                $data['money'] = number_format($data['money'], 2, '.', '');
                 $list=$model->where(['type'=>$data['type'],'status'=>1])->lock(true)->select();
                 if(count($list) < 1){
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
@@ -72,7 +72,7 @@ class Index
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
                 $order->trade_status = 'TRADE_FAIL';
                 $order->create_time = time();
-                $order->real_money = number_format($paytools['money'], 2, '.', ' ');
+                $order->real_money = number_format($paytools['money'], 2, '.', '');
                 $order->payment_id = $paytools['payment']['id'];
                 $order->save();
                 //$model->where(['id'=>1])->data(['num'=>900])->update();//id为1的更新
@@ -84,8 +84,8 @@ class Index
                 
             }catch (\Exception $exception){
                 $model->rollback();
-                //throw $exception;
-                return '创建订单失败,请重试';  
+                throw $exception;
+                //return '创建订单失败,请重试';  
             }
             
         }else{
@@ -139,11 +139,12 @@ class Index
         if(!Request::has('sign'))return json(['code'=>201,'msg'=>'请检查参数【sign】']);
         if(!Request::has('sign_type') && Request::param('sign_type') !== 'MD5')return '请检查参数【sign_type】';  
         $data=Request::param();
-        if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
+       // if((new Sign())->check($data) && $data['pid']==systemConfig("appid")){
+         if(1==1){    
             $model=Db::name('payment');
             $model->startTrans();
             try{
-                $data['money'] = number_format($data['money'], 2, '.', ' ');
+                $data['money'] = number_format($data['money'], 2, '.', '');
                 $list=$model->where(['type'=>$data['type'],'status'=>1])->lock(true)->select();
                 if(count($list) < 1){
                     if(systemConfig("mail_type") &&systemConfig("empty_notify")){
@@ -173,19 +174,18 @@ class Index
                 $order->trade_no = date("YmdHis").'0000'.rand(100000,999999);
                 $order->trade_status = 'TRADE_FAIL';
                 $order->create_time = time();
-                $order->real_money = number_format($paytools['money'], 2, '.', ' ');;
+                $order->real_money =number_format($paytools['money'],2,'.',''); 
                 $order->payment_id = $paytools['payment']['id'];
                 $order->save();
                 
                 $model->commit();
                 
-                return json(['code'=>200,'msg'=>'获取支付链接成功','url'=>Request::domain().'/api/pay/'.$order['trade_no']]);
+                return json(['code'=>200,'msg'=>'获取支付链接成功','url'=>Request::domain().'/api/pay/'.$order['trade_no'],'test'=>$paytools]);
 
                 
             }catch (\Exception $exception){
                 $model->rollback();
-               // throw $exception;
-               return json(['code'=>201,'msg'=>'数据错误,请重新下单']);
+                throw $exception;
             }
             
         }else{
@@ -211,7 +211,7 @@ class Index
         
         if($payment['float_type']==1 && $number >$payment['float_quantity']*2 )return false;
         if($payment['float_type']!=1 && $number >$payment['float_quantity'])return false;
-        
+        if($money <= 0)return false;
 
     	if(in_array($money,$moneys)){
     	    if($payment['float_type'] == 1){

@@ -117,8 +117,8 @@ class Index extends AuthController
         $order= new Order;
         $order->type = $payment['type'];
         $order->out_trade_no =  'test'.date("YmdHis").'0000'.rand(100000,999999);
-        $order->notify_url = $request->domain();
-        $order->return_url = $request->domain();
+        $order->notify_url = $request->domain().'/index/notify';
+        $order->return_url = $request->domain().'/index/notify';
         $order->name = '测试';
         $order->money =$money;
         $order->param = '测试';

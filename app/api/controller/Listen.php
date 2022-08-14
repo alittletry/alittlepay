@@ -78,7 +78,7 @@ class Listen
                       }
                     }elseif($data['pkg']=="com.tencent.mm"){
                       $isMatched = preg_match('/\d+.\d+/', $data['content'], $matches);
-                      if($isMatched && $data['title'] =="微信支付"){
+                      if($isMatched &&($data['title'] == "微信支付" || $data['title'] == "微信收款助手")){
                           //(float)$matches[0]
                           $order=Order::where(['payment_id'=>$payment_id,'trade_status'=>'TRADE_FAIL','real_money'=>$matches[0]])->find();
                           if($order){

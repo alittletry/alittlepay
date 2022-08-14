@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-    <title>用户管理 - 派后台管理系统</title>
+    <title>用户管理 - pay后台管理系统</title>
     {include file="public/header" /}
 <style>
     .qrcode{width:108px}
@@ -198,7 +198,7 @@
                     iframe.createIframe('修改通道','/admin/payment.index/edit?id='+row.id)
                 },
                 'click .test-btn': function (event, value, row, index) {
-                    $.post(url="/admin/payment.index/test",data={"id":row.id,"money":'1'},function (res) {
+                    $.post(url="/admin/payment.index/test",data={"id":row.id,"money":'1000.22'},function (res) {
                             if (res.code == 200) {
                                 parent.lightyear.notify('获取成功', 'success', 3000, 'mdi mdi-emoticon-happy', 'top', 'center');
                                

@@ -18,4 +18,8 @@ class Index extends BaseController
     {
         return 'Hello Wrold!';
     }
+    public function testnotify()
+    {
+        return 'success';
+    }
 }
