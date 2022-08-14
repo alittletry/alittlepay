@@ -46,10 +46,10 @@ class Notify
            curl_close($ch);
            //返回数据
           
-           if($output ==='SUCCESS' ||$output ==='success'){
-               Order::where('id',$order['id'])->inc('notify_count')->update(['notify_status'=>1,'param'=>$output]);
+           if($output ==='SUCCESS' ||$output ==='success'|| strstr($output,'success')){
+               Order::where('id',$order['id'])->inc('notify_count')->update(['notify_status'=>1]);
            }else{
-               Order::where('id',$order['id'])->inc('notify_count')->update(['notify_status'=>2,'param'=>$output]);
+               Order::where('id',$order['id'])->inc('notify_count')->update(['notify_status'=>2]);
            }
            $callback = new Callback();
            $callback->order_id = $order['id'];
